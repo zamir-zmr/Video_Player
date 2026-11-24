@@ -1,1894 +1,410 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#0f0f0f" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>YouTube</title>
-  <link rel="manifest" href="./manifest.json" />
-  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
-  <link rel="apple-touch-icon" href="./icon-192.png" />
-
-  <!-- Firebase Compat SDKs (Realtime Database) -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-
-  <style>
-    :root {
-      --bg: #0f0f0f;
-      --surface: #181818;
-      --surface-elevated: #272727;
-      --border: #2c2c2c;
-      --text-primary: #f1f1f1;
-      --text-secondary: #aaaaaa;
-      --yt-red: #ff0000;
-      --accent-blue: #3ea6ff;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-tap-highlight-color: transparent;
-      font-family: -apple-system, BlinkMacSystemFont, "Roboto", "Segoe UI", Arial, sans-serif;
-    }
-
-    html, body {
-      background-color: var(--bg);
-      color: var(--text-primary);
-      height: 100%;
-      overflow-x: hidden;
-      overscroll-behavior-y: contain;
-    }
-
-    /* Scrollbar hide */
-    ::-webkit-scrollbar { width: 0px; height: 0px; }
-
-    /* LOGIN SCREEN */
-    #loginScreen {
-      position: fixed;
-      inset: 0;
-      background: #0f0f0f;
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 24px;
-    }
-
-    .login-card {
-      width: 100%;
-      max-width: 380px;
-      background: #181818;
-      border: 1px solid #2b2b2b;
-      border-radius: 16px;
-      padding: 28px 22px;
-      box-shadow: 0 12px 32px rgba(0,0,0,0.65);
-    }
-
-    .login-logo {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin-bottom: 22px;
-    }
-
-    .login-logo span {
-      font-size: 24px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-    }
-
-    .input-group {
-      margin-bottom: 14px;
-    }
-
-    .input-group label {
-      display: block;
-      font-size: 12px;
-      color: var(--text-secondary);
-      margin-bottom: 6px;
-    }
-
-    .yt-input {
-      width: 100%;
-      background: #0f0f0f;
-      border: 1px solid #383838;
-      color: #fff;
-      padding: 12px 14px;
-      border-radius: 10px;
-      font-size: 15px;
-      outline: none;
-    }
-
-    .yt-input:focus {
-      border-color: var(--accent-blue);
-    }
-
-    .btn-primary {
-      width: 100%;
-      background: var(--yt-red);
-      color: #fff;
-      border: none;
-      padding: 13px;
-      border-radius: 24px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 6px;
-    }
-
-    .btn-primary:active { opacity: 0.85; }
-
-    .btn-secondary {
-      background: #272727;
-      color: #f1f1f1;
-      border: 1px solid #3a3a3a;
-      padding: 10px 14px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-    }
-
-    .error-msg {
-      color: #ff4e45;
-      font-size: 13px;
-      margin-top: 10px;
-      text-align: center;
-      min-height: 18px;
-    }
-
-    /* TOP HEADER */
-    .yt-header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: rgba(15, 15, 15, 0.97);
-      backdrop-filter: blur(8px);
-      padding: 10px 14px 0 14px;
-      border-bottom: 1px solid #222;
-    }
-
-    .header-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 40px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-    }
-
-    .brand-title {
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: -0.7px;
-      color: #fff;
-    }
-
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .icon-btn {
-      background: none;
-      border: none;
-      color: #fff;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      padding: 4px;
-    }
-
-    .notif-badge {
-      position: absolute;
-      top: -1px;
-      right: -4px;
-      background: #cc0000;
-      color: #fff;
-      font-size: 10px;
-      font-weight: 700;
-      padding: 1px 4px;
-      border-radius: 10px;
-      border: 1.5px solid #0f0f0f;
-    }
-
-    /* CATEGORY TABS */
-    .category-bar {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      overflow-x: auto;
-      margin-top: 8px;
-      padding-bottom: 0;
-    }
-
-    .cat-tab {
-      background: none;
-      border: none;
-      color: var(--text-secondary);
-      font-size: 14px;
-      font-weight: 500;
-      padding: 8px 2px 10px 2px;
-      white-space: nowrap;
-      cursor: pointer;
-      position: relative;
-    }
-
-    .cat-tab.active {
-      color: #ffffff;
-      font-weight: 600;
-    }
-
-    .cat-tab.active::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: 2.5px;
-      background: #ffffff;
-      border-radius: 2px;
-    }
-
-    /* SEARCH OVERLAY BAR */
-    .search-bar-wrap {
-      display: none;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 0 10px 0;
-    }
-
-    .search-bar-wrap.open { display: flex; }
-
-    .search-input {
-      flex: 1;
-      background: #222;
-      border: none;
-      border-radius: 20px;
-      padding: 9px 14px;
-      color: #fff;
-      font-size: 14px;
-      outline: none;
-    }
-
-    /* MAIN FEED */
-    #mainFeed {
-      padding-bottom: 72px;
-    }
-
-    .video-card {
-      margin-bottom: 18px;
-      background: var(--bg);
-    }
-
-    .thumb-wrap {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      background: #1c1c1c;
-      overflow: hidden;
-      cursor: pointer;
-    }
-
-    .thumb-wrap img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .thumb-overlay-btns {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .thumb-pill-icon {
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      background: rgba(0, 0, 0, 0.72);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-size: 11px;
-      font-weight: 700;
-    }
-
-    .duration-badge {
-      position: absolute;
-      bottom: 8px;
-      right: 8px;
-      background: rgba(0, 0, 0, 0.84);
-      color: #fff;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 2px 6px;
-      border-radius: 4px;
-    }
-
-    .red-progress-line {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      height: 3px;
-      background: var(--yt-red);
-    }
-
-    .video-meta-row {
-      display: flex;
-      padding: 12px 12px 4px 12px;
-      gap: 12px;
-      align-items: flex-start;
-    }
-
-    .channel-avatar {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #2b5876, #4e4376);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 15px;
-      color: #fff;
-      flex-shrink: 0;
-      overflow: hidden;
-    }
-
-    .video-text-col {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .video-title {
-      font-size: 15px;
-      font-weight: 500;
-      line-height: 1.32;
-      color: var(--text-primary);
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      cursor: pointer;
-    }
-
-    .video-sub-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 5px;
-    }
-
-    .video-stats {
-      font-size: 12px;
-      color: var(--text-secondary);
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .platform-tag {
-      background: #272727;
-      color: #ddd;
-      padding: 1px 6px;
-      border-radius: 4px;
-      font-size: 10px;
-      text-transform: uppercase;
-    }
-
-    .card-actions {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      color: #fff;
-    }
-
-    .card-action-btn {
-      background: none;
-      border: none;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 12px;
-      cursor: pointer;
-      padding: 2px;
-    }
-
-    /* BOTTOM NAVIGATION BAR (EXACT SCREENSHOT LAYOUT) */
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 54px;
-      background: #0f0f0f;
-      border-top: 1px solid #222;
-      display: flex;
-      align-items: center;
-      justify-content: space-around;
-      z-index: 200;
-    }
-
-    .nav-item {
-      background: none;
-      border: none;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      padding: 6px 14px;
-    }
-
-    .nav-plus-circle {
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      border: 1.5px solid #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .nav-profile-circle {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background: #00897b;
-      color: #fff;
-      font-size: 13px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-transform: uppercase;
-    }
-
-    /* FULLSCREEN LAYOUT OVERLAYS (PLAYER, VIEW DETAILS, MANAGER, PROFILE) */
-    .overlay-screen {
-      position: fixed;
-      inset: 0;
-      background: #0f0f0f;
-      z-index: 500;
-      display: none;
-      flex-direction: column;
-      overflow-y: auto;
-    }
-
-    .overlay-screen.active {
-      display: flex;
-    }
-
-    .overlay-topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 14px;
-      background: #141414;
-      border-bottom: 1px solid #262626;
-      position: sticky;
-      top: 0;
-      z-index: 20;
-    }
-
-    .overlay-title {
-      font-size: 16px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    /* VIDEO PLAYER SCREEN */
-    .player-box {
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      background: #000;
-      position: relative;
-    }
-
-    .player-box iframe,
-    .player-box video {
-      width: 100%;
-      height: 100%;
-      border: none;
-      display: block;
-    }
-
-    /* CUSTOM VIDEO PLAYER CONTROLS FOR DIRECT/EMBED */
-    .player-controls-bar {
-      background: #181818;
-      padding: 10px 14px;
-      border-bottom: 1px solid #262626;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .ctrl-chip {
-      background: #272727;
-      color: #fff;
-      border: none;
-      padding: 7px 12px;
-      border-radius: 18px;
-      font-size: 12px;
-      font-weight: 500;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-    }
-
-    .ctrl-chip.active {
-      background: #fff;
-      color: #0f0f0f;
-    }
-
-    .player-details {
-      padding: 14px;
-    }
-
-    .player-video-title {
-      font-size: 18px;
-      font-weight: 700;
-      line-height: 1.3;
-      margin-bottom: 8px;
-    }
-
-    .player-stats-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      color: var(--text-secondary);
-      font-size: 13px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid #262626;
-    }
-
-    .action-pills-scroll {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding: 12px 0;
-    }
-
-    /* VIEW HISTORY LOG LIST */
-    .section-card {
-      background: #181818;
-      border: 1px solid #282828;
-      border-radius: 12px;
-      padding: 14px;
-      margin: 12px;
-    }
-
-    .section-card h3 {
-      font-size: 15px;
-      margin-bottom: 10px;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .log-row {
-      padding: 10px 0;
-      border-bottom: 1px solid #262626;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    .log-row:last-child { border-bottom: none; }
-
-    .log-user {
-      font-weight: 600;
-      font-size: 14px;
-      color: #fff;
-    }
-
-    .log-time {
-      font-size: 12px;
-      color: var(--accent-blue);
-      margin-top: 2px;
-    }
-
-    .badge-role {
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 12px;
-      background: #2b2b2b;
-      color: #ccc;
-    }
-
-    .badge-manager {
-      background: rgba(255, 0, 0, 0.2);
-      color: #ff6b6b;
-      border: 1px solid rgba(255, 0, 0, 0.4);
-    }
-
-    .danger-btn {
-      background: #b71c1c;
-      color: #fff;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 14px;
-      font-size: 12px;
-      cursor: pointer;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: var(--text-secondary);
-      font-size: 14px;
-    }
-
-    /* TOAST */
-    #toast {
-      position: fixed;
-      bottom: 68px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #323232;
-      color: #fff;
-      padding: 10px 18px;
-      border-radius: 20px;
-      font-size: 13px;
-      z-index: 9999;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s;
-      white-space: nowrap;
-    }
-
-    #toast.show { opacity: 1; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f0f0f">
+<title>Video Player</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<style>
+:root{--bg:#0f0f0f;--tx:#fff;--mu:#aaa;--ch:#272727;--ch2:#3f3f3f;--red:#f00;--sa:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font-family:Roboto,"Segoe UI",system-ui,Arial,sans-serif;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+input{font:inherit;color:var(--tx);background:var(--ch);border:1px solid var(--ch2);border-radius:10px;padding:12px 14px;width:100%;outline:0}
+input:focus{border-color:#3ea6ff}
+svg{width:24px;height:24px;fill:currentColor;flex:none}
+#app{position:fixed;inset:0;display:flex;flex-direction:column;padding-top:var(--sa)}
+.top{display:flex;align-items:center;justify-content:space-between;padding:10px 12px}
+.logo{display:flex;align-items:center;gap:4px;font-weight:700;font-size:21px;letter-spacing:-1.2px}
+.logo i{width:32px;height:22px;background:var(--red);border-radius:6px;position:relative;display:inline-block}
+.logo i:after{content:"";position:absolute;left:12px;top:5px;border-left:9px solid #fff;border-top:6px solid transparent;border-bottom:6px solid transparent}
+.tabs{display:flex;gap:8px;padding:4px 12px 10px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{background:var(--ch);padding:7px 14px;border-radius:9px;font-size:14px;font-weight:500;white-space:nowrap}
+.tab.on{background:var(--tx);color:#000}
+#feed{flex:1;overflow-y:auto;padding-bottom:12px}
+.card{margin-bottom:18px}
+.th{position:relative;aspect-ratio:16/9;background:#222;overflow:hidden;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.th img,.th video{width:100%;height:100%;object-fit:cover;pointer-events:none}
+.th .ph{font-size:15px;font-weight:600;color:#fff;text-align:center;width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px}
+.ph.fb{background:linear-gradient(135deg,#1877f2,#0b3d91)}.ph.ig{background:linear-gradient(135deg,#f58529,#dd2a7b 50%,#515bd4)}.ph.mp{background:linear-gradient(135deg,#333,#111)}
+.dur{position:absolute;right:8px;bottom:10px;background:rgba(0,0,0,.8);font-size:12px;font-weight:500;padding:2px 5px;border-radius:4px}
+.pg{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.3)}
+.pg b{display:block;height:100%;background:var(--red);width:0}
+.meta{display:flex;gap:12px;padding:12px 12px 0}
+.av{width:38px;height:38px;border-radius:50%;background:#7b2ff7;display:flex;align-items:center;justify-content:center;font-weight:600;flex:none;text-transform:uppercase}
+.ttl{font-size:15px;line-height:1.3;font-weight:500;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.st{font-size:12px;color:var(--mu);margin-top:4px}
+.acts{display:flex;gap:18px;padding:8px 12px 0 62px;color:#ddd;font-size:13px}
+.acts button{display:flex;align-items:center;gap:6px}
+.acts svg{width:22px;height:22px}.lk.on{color:#3ea6ff}
+.empty{text-align:center;color:var(--mu);padding:60px 24px;line-height:1.5}
+.nav{display:flex;align-items:center;justify-content:space-around;border-top:1px solid #272727;padding:6px 0 calc(6px + var(--sb));background:var(--bg)}
+.nav button{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;min-width:60px}
+.nav .plus{width:42px;height:42px;border:2px solid #fff;border-radius:50%;align-items:center;justify-content:center;min-width:0}
+.nav .plus svg{width:26px;height:26px}
+.nav .me .av{width:26px;height:26px;font-size:12px}
+.ov{position:fixed;inset:0;background:var(--bg);z-index:10;display:none;flex-direction:column;padding-top:var(--sa)}
+.ov.on{display:flex}
+.sheet{background:rgba(0,0,0,.6);justify-content:flex-end}
+.sheet .box{background:#212121;border-radius:16px 16px 0 0;padding:18px 16px calc(18px + var(--sb));display:flex;flex-direction:column;gap:12px}
+.hd{display:flex;align-items:center;gap:8px;padding:8px 6px;font-weight:600;font-size:18px;border-bottom:1px solid #272727}
+.hd button{padding:8px}.hd .sp{flex:1}
+.body{flex:1;overflow-y:auto;padding:12px}
+.btn{background:var(--tx);color:#000;border-radius:22px;padding:11px 18px;font-weight:600;font-size:14px;text-align:center}
+.btn.red{background:var(--red);color:#fff}.btn.gh{background:var(--ch);color:#fff}
+.row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #1d1d1d}
+.row .g{flex:1;min-width:0}.row .n{font-weight:500;word-break:break-word}.row .s{font-size:12px;color:var(--mu);margin-top:2px}
+.row .x{color:#ff6b6b;padding:8px}
+.lg{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:24px;gap:12px;max-width:420px;width:100%;margin:0 auto}
+.lg .logo{font-size:32px;margin-bottom:12px}.lg .logo i{width:48px;height:34px}.lg .logo i:after{left:19px;top:8px;border-left:14px solid #fff;border-top:9px solid transparent;border-bottom:9px solid transparent}
+.err{color:#ff6b6b;font-size:13px;min-height:18px}
+.pw{position:relative;background:#000;aspect-ratio:16/9;width:100%}
+.pw iframe,.pw video,.pw #yt{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+.pw .tap{position:absolute;inset:0;z-index:2}
+.pw:fullscreen{aspect-ratio:auto;height:100%}
+.ctl{display:flex;flex-direction:column;gap:4px;padding:6px 10px;background:#161616}
+.ctl .r{display:flex;align-items:center;gap:4px}
+.ctl .r button{padding:6px;border-radius:8px;display:flex;align-items:center;gap:2px;font-size:12px}
+.ctl input[type=range]{padding:0;border:0;background:none;accent-color:var(--red);height:20px}
+.tm{font-size:12px;color:#ddd;min-width:92px}
+.pinfo{flex:1;overflow-y:auto;padding:12px}
+.pinfo h2{font-size:17px;margin:0 0 6px;font-weight:600;line-height:1.3;word-break:break-word}
+.pinfo .acts{padding:12px 0}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#e8e8e8;color:#000;padding:10px 16px;border-radius:8px;font-size:14px;z-index:99;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90%}
+.toast.on{opacity:1}
+.lgrow{padding:10px 0;border-bottom:1px solid #1d1d1d;display:flex;gap:12px;align-items:flex-start}
+.lgrow .tmx{font-size:13px;color:#7fd1ff;margin-top:3px;font-variant-numeric:tabular-nums}
+</style>
 </head>
 <body>
+<div id="login" class="ov on" style="z-index:50">
+  <div class="lg">
+    <div class="logo"><i></i>Video Player</div>
+    <input id="lu" placeholder="Username" autocomplete="username" autocapitalize="none" autocorrect="off">
+    <input id="lp" type="password" placeholder="Password" autocomplete="current-password">
+    <div class="err" id="le"></div>
+    <button class="btn red" id="lb" style="width:100%">Sign in</button>
+  </div>
+</div>
 
-  <!-- 1. LOGIN SCREEN -->
-  <div id="loginScreen">
-    <div class="login-card">
-      <div class="login-logo">
-        <svg width="34" height="24" viewBox="0 0 34 24">
-          <rect width="34" height="24" rx="6" fill="#FF0000"/>
-          <polygon points="14,7 14,17 23,12" fill="#FFFFFF"/>
-        </svg>
-        <span>YouTube</span>
-      </div>
-      <div class="input-group">
-        <label>Username</label>
-        <input type="text" id="loginUser" class="yt-input" placeholder="Enter username" autocomplete="off" />
-      </div>
-      <div class="input-group">
-        <label>Password</label>
-        <input type="password" id="loginPass" class="yt-input" placeholder="Enter password" />
-      </div>
-      <button class="btn-primary" onclick="handleLogin()">Sign In</button>
-      <div id="loginError" class="error-msg"></div>
+<div id="app">
+  <div class="top">
+    <div class="logo"><i></i>YouTube</div>
+    <div style="display:flex;gap:6px"><button id="bell" aria-label="Notifications"><svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 0 0 2 2zm6-6v-5c0-3.1-1.6-5.6-4.5-6.3V4a1.5 1.5 0 0 0-3 0v.7C7.6 5.4 6 7.9 6 11v5l-2 2v1h16v-1l-2-2z"/></svg></button></div>
+  </div>
+  <div class="tabs" id="tabs"></div>
+  <div id="feed"></div>
+  <div class="nav">
+    <button data-n="home"><svg viewBox="0 0 24 24"><path d="M4 21V9l8-6 8 6v12h-6v-7h-4v7z"/></svg>Home</button>
+    <button data-n="shorts"><svg viewBox="0 0 24 24"><path d="M17.8 8.4 8.6 3.3a3.3 3.3 0 0 0-3.2 5.7l1 .5-1 .5a3.3 3.3 0 0 0 .4 6l9.2 5.1a3.3 3.3 0 0 0 3.2-5.7l-1-.5 1-.5a3.3 3.3 0 0 0-.4-6zM10 14.6V9.4l4.5 2.6z"/></svg>Shorts</button>
+    <button data-n="plus" class="plus" aria-label="Add video"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"/></svg></button>
+    <button data-n="me" class="me"><span class="av" id="meav"></span>You</button>
+  </div>
+</div>
+
+<div id="o-player" class="ov">
+  <div class="hd"><button id="pb" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20z"/></svg></button><span class="sp"></span></div>
+  <div class="pw" id="pw"></div>
+  <div class="ctl" id="ctl" style="display:none">
+    <input type="range" id="sk" min="0" max="1000" value="0">
+    <div class="r">
+      <button id="c-rw" aria-label="Back 10s"><svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg>10</button>
+      <button id="c-pp" aria-label="Play or pause"></button>
+      <button id="c-ff" aria-label="Forward 10s">10<svg viewBox="0 0 24 24"><path d="M12 5V1l5 5-5 5V7a6 6 0 1 0 6 6h2a8 8 0 1 1-8-8z"/></svg></button>
+      <span class="tm" id="tm">0:00 / 0:00</span><span style="flex:1"></span>
+      <button id="c-sp">1x</button>
+      <button id="c-mu" aria-label="Mute"></button>
+      <button id="c-fs" aria-label="Fullscreen"><svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7zm-2-4h2V7h3V5H5zm12 7h-3v2h5v-5h-2zM14 5v2h3v3h2V5z"/></svg></button>
     </div>
   </div>
+  <div class="pinfo" id="pinfo"></div>
+</div>
 
-  <!-- 2. MAIN YOUTUBE HEADER -->
-  <header class="yt-header" id="appHeader">
-    <div class="header-top">
-      <div class="brand" onclick="resetHomeFeed()">
-        <svg width="28" height="20" viewBox="0 0 34 24">
-          <rect width="34" height="24" rx="5" fill="#FF0000"/>
-          <polygon points="14,7 14,17 23,12" fill="#FFFFFF"/>
-        </svg>
-        <span class="brand-title">YouTube</span>
-      </div>
+<div id="o-logs" class="ov">
+  <div class="hd"><button class="bk" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20z"/></svg></button>Watch history</div>
+  <div class="body" id="logs"></div>
+</div>
 
-      <div class="header-actions">
-        <button class="icon-btn" onclick="openViewLogsModal('ALL')" title="Notifications & Activity">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-          </svg>
-          <span class="notif-badge" id="notifCount">9+</span>
-        </button>
-        <button class="icon-btn" onclick="toggleSearchBar()" title="Search">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-        </button>
-      </div>
+<div id="o-mgr" class="ov">
+  <div class="hd"><button class="bk" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20z"/></svg></button>Manager</div>
+  <div class="body">
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+      <input id="nu" placeholder="New username" autocapitalize="none" autocorrect="off">
+      <input id="np" placeholder="New password">
+      <div class="err" id="me2"></div>
+      <button class="btn red" id="nadd">Create user</button>
+      <button class="btn gh" id="nlogs">View watch history</button>
+      <button class="btn gh" id="nall" style="color:#ff6b6b">Remove all users</button>
     </div>
-
-    <div class="search-bar-wrap" id="searchBarWrap">
-      <input type="text" id="searchInput" class="search-input" placeholder="Search YouTube videos..." oninput="renderFeed()" />
-      <button class="btn-secondary" onclick="toggleSearchBar()">Close</button>
-    </div>
-
-    <nav class="category-bar" id="categoryBar">
-      <button class="cat-tab active" data-cat="Home" onclick="selectCategory('Home', this)">Home</button>
-      <button class="cat-tab" data-cat="Subs" onclick="selectCategory('Subs', this)">Subs</button>
-      <button class="cat-tab" data-cat="Music" onclick="selectCategory('Music', this)">Music</button>
-      <button class="cat-tab" data-cat="Live" onclick="selectCategory('Live', this)">Live</button>
-      <button class="cat-tab" data-cat="More" onclick="selectCategory('More', this)">More</button>
-    </nav>
-  </header>
-
-  <!-- 3. HOME VIDEO FEED -->
-  <main id="mainFeed"></main>
-
-  <!-- 4. BOTTOM NAVIGATION BAR -->
-  <nav class="bottom-nav">
-    <button class="nav-item" onclick="resetHomeFeed()" title="Home">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff">
-        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-      </svg>
-    </button>
-
-    <button class="nav-item" onclick="selectCategoryByName('Shorts')" title="Shorts">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
-        <path d="M17.77 10.32l-1.2-.5L18 9.06a3.74 3.74 0 0 0-3.5-6.62L6 6.94a3.74 3.74 0 0 0 .23 6.74l1.2.49L6 14.93a3.75 3.75 0 0 0 3.5 6.63l8.5-4.5a3.74 3.74 0 0 0-.23-6.74z"/>
-        <polygon points="10 14.65 15 12 10 9.35 10 14.65" fill="#fff" stroke="none"/>
-      </svg>
-    </button>
-
-    <button class="nav-item" id="navAddBtn" onclick="openAddVideoScreen()" title="Add Video">
-      <div class="nav-plus-circle">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2">
-          <line x1="12" y1="5" x2="12" y2="19"/>
-          <line x1="5" y1="12" x2="19" y2="12"/>
-        </svg>
-      </div>
-    </button>
-
-    <button class="nav-item" onclick="openProfileScreen()" title="Account & Manager">
-      <div class="nav-profile-circle" id="bottomAvatarLetter">Z</div>
-    </button>
-  </nav>
-
-  <!-- 5. VIDEO PLAYER OVERLAY SCREEN -->
-  <div class="overlay-screen" id="playerScreen">
-    <div class="overlay-topbar">
-      <div class="overlay-title">
-        <button class="icon-btn" onclick="goBackFromOverlay()">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2">
-            <polyline points="15 18 9 12 15 6"/>
-          </svg>
-        </button>
-        <span id="playerHeaderTitle" style="font-size:14px; max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Playing</span>
-      </div>
-      <button class="ctrl-chip" onclick="openViewLogsModal(currentVideoId)">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-          <circle cx="12" cy="12" r="3"/>
-        </svg>
-        Views Details
-      </button>
-    </div>
-
-    <div class="player-box" id="playerContainer"></div>
-
-    <!-- Custom Controls Bar for Native HTML5 Video + Quick Controls -->
-    <div class="player-controls-bar" id="customControlsBar">
-      <div style="display:flex; gap:6px; align-items:center;">
-        <button class="ctrl-chip" onclick="controlMedia('playpause')">Play / Pause</button>
-        <button class="ctrl-chip" onclick="controlMedia('back10')">-10s</button>
-        <button class="ctrl-chip" onclick="controlMedia('fwd10')">+10s</button>
-        <button class="ctrl-chip" id="muteToggleBtn" onclick="controlMedia('mute')">Mute</button>
-      </div>
-      <div style="display:flex; gap:6px; align-items:center;">
-        <button class="ctrl-chip" id="speedBtn" onclick="cyclePlaybackSpeed()">1x</button>
-        <button class="ctrl-chip" onclick="controlMedia('fullscreen')">Full</button>
-      </div>
-    </div>
-
-    <div class="player-details">
-      <div class="player-video-title" id="playerTitle"></div>
-      <div class="player-stats-bar">
-        <span id="playerMetaStats"></span>
-        <span id="playerPlatformBadge" class="platform-tag"></span>
-      </div>
-
-      <div class="action-pills-scroll">
-        <button class="ctrl-chip" id="playerLikeBtn" onclick="toggleLikeCurrent()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
-          </svg>
-          <span id="playerLikeCount">Like</span>
-        </button>
-
-        <button class="ctrl-chip" onclick="openViewLogsModal(currentVideoId)">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-          Who Watched (<span id="playerWatcherCount">0</span>)
-        </button>
-
-        <button class="ctrl-chip" id="deleteVideoBtn" style="display:none; background:#7f1d1d;" onclick="deleteCurrentVideo()">
-          Delete Video
-        </button>
-      </div>
-
-      <!-- Inline Watch History Preview -->
-      <div class="section-card" style="margin: 8px 0;">
-        <h3>
-          <span>Recent Viewers</span>
-          <button class="btn-secondary" style="padding:4px 10px; font-size:12px;" onclick="openViewLogsModal(currentVideoId)">Full Details</button>
-        </h3>
-        <div id="playerInlineLogs"></div>
-      </div>
-    </div>
+    <div id="ulist"></div>
   </div>
-
-  <!-- 6. VIEW DETAILS LAYOUT OVERLAY (WHO WATCHED + EXACT TIME/DATE/SEC) -->
-  <div class="overlay-screen" id="viewLogsScreen">
-    <div class="overlay-topbar">
-      <div class="overlay-title">
-        <button class="icon-btn" onclick="goBackFromOverlay()">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2">
-            <polyline points="15 18 9 12 15 6"/>
-          </svg>
-        </button>
-        <span id="viewLogsHeaderTitle">Watch History Details</span>
-      </div>
-    </div>
-    <div class="section-card">
-      <h3>
-        <span>Viewer Activity Log</span>
-        <span id="totalViewsBadge" class="badge-role">0 views</span>
-      </h3>
-      <div id="viewLogsFullList"></div>
-    </div>
-  </div>
-
-  <!-- 7. ADD VIDEO LINK OVERLAY SCREEN (YOUTUBE / FACEBOOK / INSTAGRAM / DIRECT MP4) -->
-  <div class="overlay-screen" id="addVideoScreen">
-    <div class="overlay-topbar">
-      <div class="overlay-title">
-        <button class="icon-btn" onclick="goBackFromOverlay()">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2">
-            <polyline points="15 18 9 12 15 6"/>
-          </svg>
-        </button>
-        <span>Add Video Link</span>
-      </div>
-    </div>
-
-    <div class="section-card">
-      <h3>Post Video to Home Feed</h3>
-      <div class="input-group">
-        <label>Video Link (YouTube, Facebook, Instagram, or Direct MP4)</label>
-        <input type="url" id="vidUrlInput" class="yt-input" placeholder="Paste YouTube / FB / Insta / MP4 URL" oninput="autoDetectVideoMeta()" />
-      </div>
-      <div class="input-group">
-        <label>Video Title</label>
-        <input type="text" id="vidTitleInput" class="yt-input" placeholder="Enter video title" />
-      </div>
-      <div class="input-group">
-        <label>Channel Name</label>
-        <input type="text" id="vidChannelInput" class="yt-input" placeholder="@channel_name" />
-      </div>
-      <div class="input-group">
-        <label>Custom Thumbnail URL (Auto-filled for YouTube)</label>
-        <input type="url" id="vidThumbInput" class="yt-input" placeholder="https://..." />
-      </div>
-      <div style="display:flex; gap:10px;">
-        <div class="input-group" style="flex:1;">
-          <label>Category</label>
-          <select id="vidCatInput" class="yt-input">
-            <option value="Home">Home</option>
-            <option value="Music">Music</option>
-            <option value="Live">Live</option>
-            <option value="Subs">Subs</option>
-            <option value="Shorts">Shorts</option>
-            <option value="More">More</option>
-          </select>
-        </div>
-        <div class="input-group" style="width:110px;">
-          <label>Duration</label>
-          <input type="text" id="vidDurInput" class="yt-input" value="10:17" />
-        </div>
-      </div>
-      <button class="btn-primary" onclick="publishVideo()">Publish Video</button>
-    </div>
-  </div>
-
-  <!-- 8. PROFILE & MANAGER CONTROL SCREEN -->
-  <div class="overlay-screen" id="profileScreen">
-    <div class="overlay-topbar">
-      <div class="overlay-title">
-        <button class="icon-btn" onclick="goBackFromOverlay()">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2">
-            <polyline points="15 18 9 12 15 6"/>
-          </svg>
-        </button>
-        <span>Account & Settings</span>
-      </div>
-      <button class="danger-btn" onclick="handleLogout()">Logout</button>
-    </div>
-
-    <!-- Active Session Info -->
-    <div class="section-card">
-      <div style="display:flex; align-items:center; justify-content:space-between;">
-        <div>
-          <div style="font-size:17px; font-weight:700;" id="profileUsernameDisplay">zamir</div>
-          <div style="font-size:12px; color:#aaa; margin-top:2px;" id="profileRoleDisplay">Manager Account</div>
-        </div>
-        <span class="badge-role badge-manager" id="profileRoleBadge">MANAGER</span>
-      </div>
-    </div>
-
-    <!-- Manager-Only User Creation & Removal Panel -->
-    <div id="managerPanel" style="display:none;">
-      <div class="section-card">
-        <h3>Create New User Account</h3>
-        <div class="input-group">
-          <label>New Username (e.g., Rahima)</label>
-          <input type="text" id="newUsernameInput" class="yt-input" placeholder="Enter username" />
-        </div>
-        <div class="input-group">
-          <label>New Password (e.g., admin)</label>
-          <input type="text" id="newPasswordInput" class="yt-input" placeholder="Enter password" />
-        </div>
-        <button class="btn-primary" onclick="createUserByManager()">Add User</button>
-      </div>
-
-      <div class="section-card">
-        <h3>
-          <span>Manage Users</span>
-          <button class="danger-btn" onclick="removeAllUsersExceptManager()">Remove All Users</button>
-        </h3>
-        <p style="font-size:12px; color:#aaa; margin-bottom:10px;">
-          Manager (<b>zamir</b>) is permanently protected and cannot be removed.
-        </p>
-        <div id="usersListContainer"></div>
-      </div>
-    </div>
-
-    <!-- Firebase Realtime Config Setup -->
-    <div class="section-card">
-      <h3>
-        <span>Firebase Realtime Sync</span>
-        <span id="fbStatusBadge" class="badge-role">Not Connected</span>
-      </h3>
-      <p style="font-size:12px; color:#aaa; margin-bottom:10px;">
-        Paste your Firebase config JSON or snippet to sync videos, users, and live view logs automatically across all devices without refresh.
-      </p>
-      <div class="input-group">
-        <textarea id="firebaseConfigInput" class="yt-input" rows="5" placeholder='{"apiKey":"...","authDomain":"...","databaseURL":"https://...-default-rtdb.firebaseio.com","projectId":"...","appId":"..."}'></textarea>
-      </div>
-      <div style="display:flex; gap:8px;">
-        <button class="btn-primary" style="margin-top:0;" onclick="saveFirebaseConfig()">Connect & Sync Firebase</button>
-        <button class="btn-secondary" onclick="openViewLogsModal('ALL')">All Watch Logs</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="toast"></div>
-
-  <script>
-    // =========================================================
-    // 1. DEFAULT FIREBASE CONFIG (User can paste/update anytime)
-    // =========================================================
-    const DEFAULT_FIREBASE_CONFIG = {
-      // Paste your Firebase config keys here or inside the app UI
-      apiKey: "",
-      authDomain: "",
-      databaseURL: "",
-      projectId: "",
-      storageBucket: "",
-      messagingSenderId: "",
-      appId: ""
-    };
-
-    const MANAGER_USERNAME = "zamir";
-    const MANAGER_PASSWORD = "admin";
-
-    // App State
-    let currentUser = null; // { username, role }
-    let db = null;
-    let isFirebaseConnected = false;
-
-    let usersMap = {
-      zamir: { username: "zamir", password: "admin", role: "manager", createdAt: "Permanent Manager" }
-    };
-
-    let videosMap = {};
-    let viewLogsMap = {};
-
-    let activeCategory = "Home";
-    let currentVideoId = null;
-    let playbackRates = [1, 1.25, 1.5, 2, 0.75];
-    let currentRateIdx = 0;
-
-    // Seed sample video matching screenshot if empty
-    const SAMPLE_VIDEOS = {
-      "sample_vid_1": {
-        id: "sample_vid_1",
-        title: "Career Options in India vs IndianParents | aman_ai_rj14",
-        channel: "@aman_ai-3t",
-        url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-        platform: "youtube",
-        youtubeId: "dQw4w9WgXcQ",
-        thumbnail: "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
-        duration: "10:17",
-        category: "Home",
-        likes: 12,
-        createdAt: Date.now() - 86400000
-      }
-    };
-
-    // =========================================================
-    // 2. SERVICE WORKER REGISTRATION (PWA)
-    // =========================================================
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./sw.js").catch(() => {});
-      });
-    }
-
-    // =========================================================
-    // 3. MOBILE HARDWARE BACK BUTTON NAVIGATION
-    // =========================================================
-    function pushOverlayState(overlayName) {
-      history.pushState({ overlay: overlayName }, "", "#" + overlayName);
-    }
-
-    function closeAllOverlays() {
-      document.querySelectorAll(".overlay-screen").forEach(el => el.classList.remove("active"));
-      // Stop playing media when closing player
-      const container = document.getElementById("playerContainer");
-      if (container) container.innerHTML = "";
-    }
-
-    function goBackFromOverlay() {
-      if (window.location.hash && window.location.hash !== "#home") {
-        history.back();
-      } else {
-        closeAllOverlays();
-      }
-    }
-
-    window.addEventListener("popstate", (event) => {
-      const state = event.state;
-      closeAllOverlays();
-      if (state && state.overlay) {
-        if (state.overlay === "player" && currentVideoId) {
-          renderPlayerScreen(currentVideoId, false);
-        } else if (state.overlay === "viewLogs") {
-          document.getElementById("viewLogsScreen").classList.add("active");
-        } else if (state.overlay === "addVideo") {
-          document.getElementById("addVideoScreen").classList.add("active");
-        } else if (state.overlay === "profile") {
-          document.getElementById("profileScreen").classList.add("active");
-        }
-      }
-    });
-
-    // =========================================================
-    // 4. FIREBASE REALTIME DATABASE CONNECTION & AUTO SYNC
-    // =========================================================
-    function initFirebaseFromStorage() {
-      const savedRaw = localStorage.getItem("yt_fb_config");
-      let cfg = DEFAULT_FIREBASE_CONFIG;
-      if (savedRaw) {
-        try {
-          cfg = JSON.parse(savedRaw);
-          document.getElementById("firebaseConfigInput").value = JSON.stringify(cfg, null, 2);
-        } catch (e) {}
-      }
-      if (cfg && cfg.databaseURL && cfg.apiKey) {
-        connectFirebase(cfg);
-      } else {
-        loadLocalFallbackData();
-      }
-    }
-
-    function parseFlexibleFirebaseConfig(rawText) {
-      const trimmed = rawText.trim();
-      if (trimmed.startsWith("{")) {
-        return JSON.parse(trimmed);
-      }
-      // Extract key-value pairs from JS snippet like const firebaseConfig = { apiKey: "...", ... }
-      const keys = ["apiKey", "authDomain", "databaseURL", "projectId", "storageBucket", "messagingSenderId", "appId"];
-      const parsed = {};
-      keys.forEach(k => {
-        const regex = new RegExp(k + '\s*:\s*["']([^"']+)["']');
-        const m = trimmed.match(regex);
-        if (m) parsed[k] = m[1];
-      });
-      return parsed;
-    }
-
-    function saveFirebaseConfig() {
-      const raw = document.getElementById("firebaseConfigInput").value;
-      try {
-        const cfg = parseFlexibleFirebaseConfig(raw);
-        if (!cfg.databaseURL) {
-          showToast("databaseURL missing in Firebase config!");
-          return;
-        }
-        localStorage.setItem("yt_fb_config", JSON.stringify(cfg));
-        connectFirebase(cfg);
-        showToast("Firebase Connected! Live Auto-Sync Active.");
-      } catch (e) {
-        showToast("Invalid Firebase Config format");
-      }
-    }
-
-    function connectFirebase(cfg) {
-      try {
-        if (!firebase.apps.length) {
-          firebase.initializeApp(cfg);
-        }
-        db = firebase.database();
-        isFirebaseConnected = true;
-
-        const badge = document.getElementById("fbStatusBadge");
-        badge.textContent = "Live Connected";
-        badge.style.background = "#1b5e20";
-        badge.style.color = "#a5d6a7";
-
-        // Ensure permanent manager always exists in Firebase
-        db.ref("users/zamir").update({
-          username: MANAGER_USERNAME,
-          password: MANAGER_PASSWORD,
-          role: "manager"
-        });
-
-        // REALTIME LISTENER 1: USERS
-        db.ref("users").on("value", (snap) => {
-          const data = snap.val() || {};
-          data.zamir = { username: MANAGER_USERNAME, password: MANAGER_PASSWORD, role: "manager" };
-          usersMap = data;
-          renderUsersList();
-
-          // Auto-logout if current non-manager user was removed by manager
-          if (currentUser && currentUser.username !== MANAGER_USERNAME) {
-            if (!usersMap[currentUser.username]) {
-              handleLogout();
-              showToast("Account removed by Manager");
-            }
-          }
-        });
-
-        // REALTIME LISTENER 2: VIDEOS (Auto-updates Rahima's screen without refresh)
-        db.ref("videos").on("value", (snap) => {
-          videosMap = snap.val() || {};
-          renderFeed();
-          if (currentVideoId && videosMap[currentVideoId]) {
-            updatePlayerDynamicStats(currentVideoId);
-          }
-        });
-
-        // REALTIME LISTENER 3: VIEW LOGS
-        db.ref("viewLogs").on("value", (snap) => {
-          viewLogsMap = snap.val() || {};
-          renderFeed();
-          updateNotificationCount();
-          if (currentVideoId) {
-            renderInlinePlayerLogs(currentVideoId);
-            updatePlayerDynamicStats(currentVideoId);
-          }
-          if (document.getElementById("viewLogsScreen").classList.contains("active")) {
-            renderFullLogsModal(currentLogsFilterVideoId);
-          }
-        });
-
-      } catch (err) {
-        console.error(err);
-        showToast("Firebase connection error");
-      }
-    }
-
-    function loadLocalFallbackData() {
-      const u = localStorage.getItem("yt_local_users");
-      const v = localStorage.getItem("yt_local_videos");
-      const l = localStorage.getItem("yt_local_logs");
-      if (u) usersMap = JSON.parse(u);
-      usersMap.zamir = { username: MANAGER_USERNAME, password: MANAGER_PASSWORD, role: "manager" };
-      videosMap = v ? JSON.parse(v) : SAMPLE_VIDEOS;
-      viewLogsMap = l ? JSON.parse(l) : {};
-      renderFeed();
-      updateNotificationCount();
-    }
-
-    function syncLocalFallback() {
-      localStorage.setItem("yt_local_users", JSON.stringify(usersMap));
-      localStorage.setItem("yt_local_videos", JSON.stringify(videosMap));
-      localStorage.setItem("yt_local_logs", JSON.stringify(viewLogsMap));
-    }
-
-    // =========================================================
-    // 5. AUTHENTICATION (USERNAME & PASSWORD LOGIN / LOGOUT)
-    // =========================================================
-    function checkSavedSession() {
-      const saved = localStorage.getItem("yt_session_user");
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (parsed && parsed.username) {
-            loginSuccess(parsed.username, parsed.username === MANAGER_USERNAME ? "manager" : "user");
-          }
-        } catch (e) {}
-      }
-    }
-
-    function handleLogin() {
-      const uname = document.getElementById("loginUser").value.trim();
-      const pass = document.getElementById("loginPass").value.trim();
-      const errEl = document.getElementById("loginError");
-      errEl.textContent = "";
-
-      if (!uname || !pass) {
-        errEl.textContent = "Please enter username and password";
-        return;
-      }
-
-      // 1. Permanent Manager Check
-      if (uname.toLowerCase() === MANAGER_USERNAME && pass === MANAGER_PASSWORD) {
-        loginSuccess(MANAGER_USERNAME, "manager");
-        return;
-      }
-
-      // 2. Manager-Created Users Check (case-insensitive username match)
-      const matchedKey = Object.keys(usersMap).find(k => k.toLowerCase() === uname.toLowerCase());
-      if (matchedKey && usersMap[matchedKey].password === pass) {
-        loginSuccess(usersMap[matchedKey].username, usersMap[matchedKey].role || "user");
-        return;
-      }
-
-      errEl.textContent = "Invalid username or password";
-    }
-
-    function loginSuccess(username, role) {
-      currentUser = { username, role };
-      localStorage.setItem("yt_session_user", JSON.stringify(currentUser));
-      document.getElementById("loginScreen").style.display = "none";
-
-      // Update UI Avatar & Manager Controls
-      document.getElementById("bottomAvatarLetter").textContent = username.charAt(0).toUpperCase();
-      document.getElementById("profileUsernameDisplay").textContent = username;
-
-      const isMgr = (username.toLowerCase() === MANAGER_USERNAME);
-      document.getElementById("profileRoleDisplay").textContent = isMgr ? "Manager (Full Control)" : "Viewer Member";
-      document.getElementById("profileRoleBadge").textContent = isMgr ? "MANAGER" : "USER";
-      document.getElementById("profileRoleBadge").className = isMgr ? "badge-role badge-manager" : "badge-role";
-
-      document.getElementById("managerPanel").style.display = isMgr ? "block" : "none";
-      document.getElementById("deleteVideoBtn").style.display = isMgr ? "inline-flex" : "none";
-
-      history.replaceState({ overlay: null }, "", "#home");
-      renderFeed();
-      renderUsersList();
-      updateNotificationCount();
-    }
-
-    function handleLogout() {
-      localStorage.removeItem("yt_session_user");
-      currentUser = null;
-      closeAllOverlays();
-      document.getElementById("loginUser").value = "";
-      document.getElementById("loginPass").value = "";
-      document.getElementById("loginError").textContent = "";
-      document.getElementById("loginScreen").style.display = "flex";
-    }
-
-    // =========================================================
-    // 6. MANAGER USER MANAGEMENT (ADD / REMOVE / REMOVE ALL)
-    // =========================================================
-    function createUserByManager() {
-      if (!currentUser || currentUser.username.toLowerCase() !== MANAGER_USERNAME) return;
-      const newU = document.getElementById("newUsernameInput").value.trim();
-      const newP = document.getElementById("newPasswordInput").value.trim();
-
-      if (!newU || !newP) {
-        showToast("Enter both username and password");
-        return;
-      }
-      if (newU.toLowerCase() === MANAGER_USERNAME) {
-        showToast("zamir is already the permanent manager");
-        return;
-      }
-
-      const key = newU.replace(/[.#$\[\]]/g, "_");
-      const userObj = {
-        username: newU,
-        password: newP,
-        role: "user",
-        createdAt: formatFullTimestamp(new Date())
-      };
-
-      if (isFirebaseConnected && db) {
-        db.ref("users/" + key).set(userObj);
-      } else {
-        usersMap[key] = userObj;
-        syncLocalFallback();
-        renderUsersList();
-      }
-
-      document.getElementById("newUsernameInput").value = "";
-      document.getElementById("newPasswordInput").value = "";
-      showToast("User '" + newU + "' added!");
-    }
-
-    function removeSingleUser(userKey) {
-      if (!currentUser || currentUser.username.toLowerCase() !== MANAGER_USERNAME) return;
-      if (userKey.toLowerCase() === MANAGER_USERNAME) {
-        showToast("Manager cannot be deleted");
-        return;
-      }
-      if (isFirebaseConnected && db) {
-        db.ref("users/" + userKey).remove();
-      } else {
-        delete usersMap[userKey];
-        syncLocalFallback();
-        renderUsersList();
-      }
-      showToast("User removed");
-    }
-
-    function removeAllUsersExceptManager() {
-      if (!currentUser || currentUser.username.toLowerCase() !== MANAGER_USERNAME) return;
-      const onlyManager = {
-        zamir: { username: MANAGER_USERNAME, password: MANAGER_PASSWORD, role: "manager" }
-      };
-      if (isFirebaseConnected && db) {
-        db.ref("users").set(onlyManager);
-      } else {
-        usersMap = onlyManager;
-        syncLocalFallback();
-        renderUsersList();
-      }
-      showToast("All users removed. Manager preserved.");
-    }
-
-    function renderUsersList() {
-      const container = document.getElementById("usersListContainer");
-      if (!container) return;
-      const keys = Object.keys(usersMap);
-      container.innerHTML = keys.map(k => {
-        const u = usersMap[k];
-        const isMgr = (k.toLowerCase() === MANAGER_USERNAME);
-        return `
-          <div class="log-row">
-            <div>
-              <div class="log-user">${escapeHtml(u.username)} ${isMgr ? '<span class="badge-role badge-manager">Manager</span>' : ''}</div>
-              <div style="font-size:12px; color:#aaa;">Password: <b>${escapeHtml(u.password)}</b></div>
-            </div>
-            ${isMgr ? '<span style="font-size:12px; color:#888;">Protected</span>' : `<button class="danger-btn" onclick="removeSingleUser('${escapeHtml(k)}')">Remove</button>`}
-          </div>
-        `;
-      }).join("");
-    }
-
-    // =========================================================
-    // 7. VIDEO LINK PARSING & PUBLISHING (YT / FB / INSTA / MP4)
-    // =========================================================
-    function parseVideoUrl(url) {
-      const u = url.trim();
-      // YouTube (watch, shorts, youtu.be, embed)
-      const ytMatch = u.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-      if (ytMatch) {
-        const vid = ytMatch[1];
-        return {
-          platform: "youtube",
-          youtubeId: vid,
-          thumbnail: `https://i.ytimg.com/vi/${vid}/hqdefault.jpg`
-        };
-      }
-      // Instagram
-      if (u.includes("instagram.com")) {
-        return {
-          platform: "instagram",
-          youtubeId: "",
-          thumbnail: "https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=800&q=80"
-        };
-      }
-      // Facebook
-      if (u.includes("facebook.com") || u.includes("fb.watch")) {
-        return {
-          platform: "facebook",
-          youtubeId: "",
-          thumbnail: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800&q=80"
-        };
-      }
-      // Direct MP4 / Video
-      return {
-        platform: "video",
-        youtubeId: "",
-        thumbnail: "https://images.unsplash.com/photo-1536240478700-b869070f9279?w=800&q=80"
-      };
-    }
-
-    function autoDetectVideoMeta() {
-      const url = document.getElementById("vidUrlInput").value;
-      if (!url) return;
-      const meta = parseVideoUrl(url);
-      if (meta.thumbnail && !document.getElementById("vidThumbInput").value) {
-        document.getElementById("vidThumbInput").value = meta.thumbnail;
-      }
-      if (!document.getElementById("vidChannelInput").value && currentUser) {
-        document.getElementById("vidChannelInput").value = "@" + currentUser.username;
-      }
-    }
-
-    function publishVideo() {
-      const url = document.getElementById("vidUrlInput").value.trim();
-      const title = document.getElementById("vidTitleInput").value.trim();
-      const channel = document.getElementById("vidChannelInput").value.trim() || ("@" + currentUser.username);
-      const customThumb = document.getElementById("vidThumbInput").value.trim();
-      const category = document.getElementById("vidCatInput").value;
-      const duration = document.getElementById("vidDurInput").value.trim() || "10:17";
-
-      if (!url || !title) {
-        showToast("Video Link and Title are required");
-        return;
-      }
-
-      const meta = parseVideoUrl(url);
-      const id = "vid_" + Date.now();
-      const videoObj = {
-        id,
-        title,
-        channel,
-        url,
-        platform: meta.platform,
-        youtubeId: meta.youtubeId,
-        thumbnail: customThumb || meta.thumbnail,
-        duration,
-        category,
-        likes: 0,
-        addedBy: currentUser.username,
-        createdAt: Date.now()
-      };
-
-      if (isFirebaseConnected && db) {
-        db.ref("videos/" + id).set(videoObj);
-      } else {
-        videosMap[id] = videoObj;
-        syncLocalFallback();
-        renderFeed();
-      }
-
-      document.getElementById("vidUrlInput").value = "";
-      document.getElementById("vidTitleInput").value = "";
-      document.getElementById("vidThumbInput").value = "";
-      showToast("Video published to Home Feed!");
-      goBackFromOverlay();
-    }
-
-    function deleteCurrentVideo() {
-      if (!currentVideoId || !currentUser || currentUser.username.toLowerCase() !== MANAGER_USERNAME) return;
-      if (isFirebaseConnected && db) {
-        db.ref("videos/" + currentVideoId).remove();
-      } else {
-        delete videosMap[currentVideoId];
-        syncLocalFallback();
-        renderFeed();
-      }
-      showToast("Video deleted");
-      goBackFromOverlay();
-    }
-
-    // =========================================================
-    // 8. EXACT TIMESTAMP & WATCH LOGGING (10:13:20 AM, Nov 24, 2026)
-    // =========================================================
-    function formatFullTimestamp(dateObj) {
-      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      const mon = months[dateObj.getMonth()];
-      const day = dateObj.getDate();
-      const year = dateObj.getFullYear();
-
-      let hrs = dateObj.getHours();
-      const ampm = hrs >= 12 ? "PM" : "AM";
-      hrs = hrs % 12;
-      hrs = hrs ? hrs : 12;
-      const mins = String(dateObj.getMinutes()).padStart(2, "0");
-      const secs = String(dateObj.getSeconds()).padStart(2, "0");
-
-      return `${hrs}:${mins}:${secs} ${ampm} • ${mon} ${day}, ${year}`;
-    }
-
-    function recordVideoView(videoId) {
-      if (!currentUser || !videosMap[videoId]) return;
-      const vid = videosMap[videoId];
-      const logId = "log_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
-      const now = new Date();
-
-      const logEntry = {
-        id: logId,
-        videoId: videoId,
-        videoTitle: vid.title,
-        username: currentUser.username,
-        formattedTime: formatFullTimestamp(now),
-        timestamp: now.getTime()
-      };
-
-      if (isFirebaseConnected && db) {
-        db.ref("viewLogs/" + logId).set(logEntry);
-      } else {
-        viewLogsMap[logId] = logEntry;
-        syncLocalFallback();
-        renderFeed();
-        updateNotificationCount();
-      }
-    }
-
-    function getLogsForVideo(videoId) {
-      const all = Object.values(viewLogsMap || {});
-      return all
-        .filter(item => videoId === "ALL" || item.videoId === videoId)
-        .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-    }
-
-    function updateNotificationCount() {
-      const total = Object.keys(viewLogsMap || {}).length;
-      const badge = document.getElementById("notifCount");
-      if (badge) badge.textContent = total > 9 ? "9+" : String(total);
-    }
-
-    // =========================================================
-    // 9. RENDER HOME FEED (EXACT SCREENSHOT CARD DESIGN)
-    // =========================================================
-    function selectCategory(cat, btnEl) {
-      activeCategory = cat;
-      document.querySelectorAll(".cat-tab").forEach(b => b.classList.remove("active"));
-      if (btnEl) btnEl.classList.add("active");
-      renderFeed();
-    }
-
-    function selectCategoryByName(cat) {
-      activeCategory = cat;
-      document.querySelectorAll(".cat-tab").forEach(b => {
-        b.classList.toggle("active", b.dataset.cat === cat);
-      });
-      renderFeed();
-    }
-
-    function resetHomeFeed() {
-      closeAllOverlays();
-      selectCategoryByName("Home");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-
-    function toggleSearchBar() {
-      const wrap = document.getElementById("searchBarWrap");
-      wrap.classList.toggle("open");
-      if (wrap.classList.contains("open")) {
-        document.getElementById("searchInput").focus();
-      } else {
-        document.getElementById("searchInput").value = "";
-        renderFeed();
-      }
-    }
-
-    function timeAgoLabel(ts) {
-      if (!ts) return "Just now";
-      const diffSec = Math.floor((Date.now() - ts) / 1000);
-      if (diffSec < 60) return "Just now";
-      if (diffSec < 3600) return Math.floor(diffSec / 60) + "m ago";
-      if (diffSec < 86400) return Math.floor(diffSec / 3600) + "h ago";
-      return Math.floor(diffSec / 86400) + "d ago";
-    }
-
-    function renderFeed() {
-      const feedEl = document.getElementById("mainFeed");
-      const query = (document.getElementById("searchInput").value || "").toLowerCase().trim();
-
-      let list = Object.values(videosMap || {}).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-
-      if (activeCategory !== "Home" && activeCategory !== "More") {
-        list = list.filter(v => (v.category || "Home").toLowerCase() === activeCategory.toLowerCase());
-      }
-
-      if (query) {
-        list = list.filter(v =>
-          (v.title || "").toLowerCase().includes(query) ||
-          (v.channel || "").toLowerCase().includes(query)
-        );
-      }
-
-      if (!list.length) {
-        feedEl.innerHTML = `<div class="empty-state">No videos found. Tap <b>+</b> below to add YouTube, Facebook, or Instagram video links.</div>`;
-        return;
-      }
-
-      feedEl.innerHTML = list.map(v => {
-        const logs = getLogsForVideo(v.id);
-        const viewCount = logs.length;
-        const initial = (v.channel || "Y").replace("@", "").charAt(0).toUpperCase();
-
-        return `
-          <article class="video-card">
-            <div class="thumb-wrap" onclick="openVideoPlayer('${v.id}')">
-              <img src="${escapeHtml(v.thumbnail)}" alt="Thumbnail" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=800&q=80'" />
-              <div class="thumb-overlay-btns">
-                <div class="thumb-pill-icon">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
-                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-                    <line x1="23" y1="9" x2="17" y2="15"/>
-                    <line x1="17" y1="9" x2="23" y2="15"/>
-                  </svg>
-                </div>
-                <div class="thumb-pill-icon">CC</div>
-              </div>
-              <div class="duration-badge">${escapeHtml(v.duration || "10:17")}</div>
-              <div class="red-progress-line" style="width: 14%;"></div>
-            </div>
-
-            <div class="video-meta-row">
-              <div class="channel-avatar" onclick="openVideoPlayer('${v.id}')">${escapeHtml(initial)}</div>
-              <div class="video-text-col">
-                <div class="video-title" onclick="openVideoPlayer('${v.id}')">${escapeHtml(v.title)}</div>
-                <div class="video-sub-row">
-                  <div class="video-stats" onclick="openViewLogsModal('${v.id}')" style="cursor:pointer;">
-                    <span>${escapeHtml(v.channel || "@channel")}</span>
-                    <span>• ▷ ${viewCount} views</span>
-                    <span>• ${timeAgoLabel(v.createdAt)}</span>
-                    <span class="platform-tag">${escapeHtml(v.platform || "youtube")}</span>
-                  </div>
-
-                  <div class="card-actions">
-                    <button class="card-action-btn" onclick="toggleLikeVideo('${v.id}')" title="Like">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
-                      </svg>
-                    </button>
-                    <button class="card-action-btn" onclick="openViewLogsModal('${v.id}')" title="Who Watched">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </article>
-        `;
-      }).join("");
-    }
-
-    // =========================================================
-    // 10. VIDEO PLAYER & EMBED RENDERING (YT / FB / INSTA / MP4)
-    // =========================================================
-    function openVideoPlayer(videoId) {
-      currentVideoId = videoId;
-      recordVideoView(videoId);
-      pushOverlayState("player");
-      renderPlayerScreen(videoId, true);
-    }
-
-    function renderPlayerScreen(videoId) {
-      const vid = videosMap[videoId];
-      if (!vid) return;
-
-      closeAllOverlays();
-      const screen = document.getElementById("playerScreen");
-      screen.classList.add("active");
-
-      document.getElementById("playerHeaderTitle").textContent = vid.title;
-      document.getElementById("playerTitle").textContent = vid.title;
-      document.getElementById("playerPlatformBadge").textContent = vid.platform || "video";
-
-      const container = document.getElementById("playerContainer");
-      const controlsBar = document.getElementById("customControlsBar");
-
-      if (vid.platform === "youtube" && vid.youtubeId) {
-        controlsBar.style.display = "none"; // YouTube native player provides full controls
-        container.innerHTML = `
-          <iframe
-            src="https://www.youtube.com/embed/${vid.youtubeId}?autoplay=1&rel=0&modestbranding=1&playsinline=1"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-            allowfullscreen>
-          </iframe>`;
-      } else if (vid.platform === "instagram") {
-        controlsBar.style.display = "none";
-        const cleanUrl = vid.url.split("?")[0].replace(/\/$/, "");
-        container.innerHTML = `
-          <iframe
-            src="${cleanUrl}/embed"
-            allowfullscreen
-            scrolling="no">
-          </iframe>`;
-      } else if (vid.platform === "facebook") {
-        controlsBar.style.display = "none";
-        const encoded = encodeURIComponent(vid.url);
-        container.innerHTML = `
-          <iframe
-            src="https://www.facebook.com/plugins/video.php?href=${encoded}&show_text=false&autoplay=true"
-            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-            allowfullscreen>
-          </iframe>`;
-      } else {
-        // Direct MP4 / HTML5 Video with Custom Controls
-        controlsBar.style.display = "flex";
-        container.innerHTML = `
-          <video id="nativeVideoPlayer" src="${escapeHtml(vid.url)}" controls autoplay playsinline></video>`;
-      }
-
-      updatePlayerDynamicStats(videoId);
-      renderInlinePlayerLogs(videoId);
-    }
-
-    function controlMedia(action) {
-      const videoEl = document.getElementById("nativeVideoPlayer");
-      if (!videoEl) return;
-      if (action === "playpause") {
-        videoEl.paused ? videoEl.play() : videoEl.pause();
-      } else if (action === "back10") {
-        videoEl.currentTime = Math.max(0, videoEl.currentTime - 10);
-      } else if (action === "fwd10") {
-        videoEl.currentTime = Math.min(videoEl.duration || 99999, videoEl.currentTime + 10);
-      } else if (action === "mute") {
-        videoEl.muted = !videoEl.muted;
-        document.getElementById("muteToggleBtn").textContent = videoEl.muted ? "Unmute" : "Mute";
-      } else if (action === "fullscreen") {
-        if (videoEl.requestFullscreen) videoEl.requestFullscreen();
-      }
-    }
-
-    function cyclePlaybackSpeed() {
-      const videoEl = document.getElementById("nativeVideoPlayer");
-      if (!videoEl) return;
-      currentRateIdx = (currentRateIdx + 1) % playbackRates.length;
-      const rate = playbackRates[currentRateIdx];
-      videoEl.playbackRate = rate;
-      document.getElementById("speedBtn").textContent = rate + "x";
-    }
-
-    function updatePlayerDynamicStats(videoId) {
-      const vid = videosMap[videoId];
-      if (!vid) return;
-      const logs = getLogsForVideo(videoId);
-      document.getElementById("playerMetaStats").textContent = `${vid.channel} • ${logs.length} views • ${timeAgoLabel(vid.createdAt)}`;
-      document.getElementById("playerLikeCount").textContent = (vid.likes || 0) + " Likes";
-      document.getElementById("playerWatcherCount").textContent = logs.length;
-    }
-
-    function toggleLikeVideo(videoId) {
-      const vid = videosMap[videoId];
-      if (!vid) return;
-      const newLikes = (vid.likes || 0) + 1;
-      if (isFirebaseConnected && db) {
-        db.ref("videos/" + videoId + "/likes").set(newLikes);
-      } else {
-        vid.likes = newLikes;
-        syncLocalFallback();
-        renderFeed();
-      }
-      showToast("Liked video");
-    }
-
-    function toggleLikeCurrent() {
-      if (currentVideoId) {
-        toggleLikeVideo(currentVideoId);
-        updatePlayerDynamicStats(currentVideoId);
-      }
-    }
-
-    function renderInlinePlayerLogs(videoId) {
-      const logs = getLogsForVideo(videoId).slice(0, 5);
-      const el = document.getElementById("playerInlineLogs");
-      if (!logs.length) {
-        el.innerHTML = `<div style="font-size:13px; color:#888;">No views recorded yet.</div>`;
-        return;
-      }
-      el.innerHTML = logs.map(l => `
-        <div class="log-row">
-          <div>
-            <div class="log-user">${escapeHtml(l.username)}</div>
-            <div class="log-time">${escapeHtml(l.formattedTime)}</div>
-          </div>
-          <span class="badge-role">Watched</span>
-        </div>
-      `).join("");
-    }
-
-    // =========================================================
-    // 11. FULL WATCH LOGS LAYOUT MODAL & OVERLAY NAVIGATION
-    // =========================================================
-    let currentLogsFilterVideoId = "ALL";
-
-    function openViewLogsModal(videoId) {
-      currentLogsFilterVideoId = videoId;
-      pushOverlayState("viewLogs");
-      closeAllOverlays();
-      document.getElementById("viewLogsScreen").classList.add("active");
-      renderFullLogsModal(videoId);
-    }
-
-    function renderFullLogsModal(videoId) {
-      const logs = getLogsForVideo(videoId);
-      const titleEl = document.getElementById("viewLogsHeaderTitle");
-      if (videoId === "ALL") {
-        titleEl.textContent = "All Video Watch Logs";
-      } else {
-        const v = videosMap[videoId];
-        titleEl.textContent = v ? ("Views: " + v.title) : "Watch Details";
-      }
-
-      document.getElementById("totalViewsBadge").textContent = logs.length + " views";
-      const listEl = document.getElementById("viewLogsFullList");
-
-      if (!logs.length) {
-        listEl.innerHTML = `<div class="empty-state">No one has watched this video yet.</div>`;
-        return;
-      }
-
-      listEl.innerHTML = logs.map(l => `
-        <div class="log-row">
-          <div>
-            <div class="log-user">${escapeHtml(l.username)}</div>
-            ${videoId === "ALL" ? `<div style="font-size:12px; color:#ccc; margin-top:2px;">Video: ${escapeHtml(l.videoTitle || "")}</div>` : ""}
-            <div class="log-time">${escapeHtml(l.formattedTime)}</div>
-          </div>
-          <span class="badge-role">Viewed</span>
-        </div>
-      `).join("");
-    }
-
-    function openAddVideoScreen() {
-      pushOverlayState("addVideo");
-      closeAllOverlays();
-      document.getElementById("addVideoScreen").classList.add("active");
-    }
-
-    function openProfileScreen() {
-      pushOverlayState("profile");
-      closeAllOverlays();
-      document.getElementById("profileScreen").classList.add("active");
-      renderUsersList();
-    }
-
-    // =========================================================
-    // 12. UTILITIES
-    // =========================================================
-    function showToast(msg) {
-      const t = document.getElementById("toast");
-      t.textContent = msg;
-      t.classList.add("show");
-      setTimeout(() => t.classList.remove("show"), 2600);
-    }
-
-    function escapeHtml(str) {
-      if (!str) return "";
-      return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
-    }
-
-    // Initialize App
-    initFirebaseFromStorage();
-    checkSavedSession();
-  </script>
+</div>
+
+<div id="o-add" class="ov sheet"><div class="box">
+  <div style="font-weight:600;font-size:17px">Add video link</div>
+  <input id="au" placeholder="YouTube, Facebook, Instagram or MP4 link" autocapitalize="none" autocorrect="off">
+  <input id="at" placeholder="Title (optional)">
+  <div class="err" id="ae"></div>
+  <button class="btn red" id="aok">Add video</button>
+  <button class="btn gh bk">Cancel</button>
+</div></div>
+
+<div id="o-me" class="ov sheet"><div class="box">
+  <div class="row" style="border:0"><span class="av" id="meav2"></span><div class="g"><div class="n" id="mename"></div><div class="s" id="merole"></div></div></div>
+  <button class="btn gh" id="mgr">Manager panel</button>
+  <button class="btn gh" id="mlogs">Watch history</button>
+  <button class="btn red" id="out">Log out</button>
+  <button class="btn gh bk">Close</button>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import{getDatabase,ref,onValue,set,remove,push,get,update}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+const app=initializeApp({apiKey:"AIzaSyBdzrc8lmNbv-7NTl2dy70RWY6Vq0kFqoI",authDomain:"video-player-cf75f.firebaseapp.com",databaseURL:"https://video-player-cf75f-default-rtdb.firebaseio.com",projectId:"video-player-cf75f",storageBucket:"video-player-cf75f.firebasestorage.app",messagingSenderId:"195869648261",appId:"1:195869648261:web:f84082d1d16cd95ae990ec"});
+const db=getDatabase(app);
+const $=id=>document.getElementById(id);
+const MGR="zamir",MPW="admin";
+const S={user:localStorage.getItem("vp_user")||null,users:{},videos:{},likes:{},views:{},tab:"home",cur:null,ad:null,ready:{}};
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const isM=()=>S.user===MGR;
+const MO=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const p2=n=>String(n).padStart(2,"0");
+function fmt(t){const d=new Date(t);let h=d.getHours();const ap=h>=12?"PM":"AM";h=h%12||12;return`${p2(h)}:${p2(d.getMinutes())}:${p2(d.getSeconds())} ${ap} • ${MO[d.getMonth()]} ${p2(d.getDate())}, ${d.getFullYear()}`}
+const dshort=t=>{const d=new Date(t);return`${MO[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`};
+const dur=s=>{s=Math.max(0,Math.floor(s||0));const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return(h?h+":"+p2(m):m)+":"+p2(s%60)};
+const kfmt=n=>n>=1e6?(n/1e6).toFixed(1)+"M":n>=1e3?(n/1e3).toFixed(1)+"K":String(n);
+let tt;function toast(m){const t=$("toast");t.textContent=m;t.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("on"),2200)}
+const IC={like:'<svg viewBox="0 0 24 24"><path d="M1 21h4V9H1zm22-11a2 2 0 0 0-2-2h-6.3l1-4.6v-.3c0-.4-.2-.8-.4-1.1L14.2 1 7.6 7.6C7.2 8 7 8.500 7 9v10a2 2 0 0 0 2 2h9c.8 0 1.500-.5 1.800-1.200l3-7c.1-.3.200-.5.200-.8z"/></svg>',
+cm:'<svg viewBox="0 0 24 24"><path d="M21.990 4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v18l4-4h14c1.100 0 2-.9 2-2zM18 14H6v-2h12zm0-3H6V9h12zm0-3H6V6h12z"/></svg>',
+del:'<svg viewBox="0 0 24 24"><path d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6zM19 4h-3.500l-1-1h-5l-1 1H5v2h14z"/></svg>',
+play:'<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>',pause:'<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6zm8-14v14h4V5z"/></svg>',
+vol:'<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9zm13.500 3A4.500 4.500 0 0 0 14 7.970v8.050c1.500-.7 2.500-2.200 2.500-4.020z"/></svg>',
+mute:'<svg viewBox="0 0 24 24"><path d="M16.500 12A4.500 4.500 0 0 0 14 7.970v2.210l2.450 2.450c.03-.2.050-.4.050-.63zm2.500 0c0 .9-.2 1.800-.5 2.600l1.500 1.500A9 9 0 0 0 21 12c0-4.300-3-7.900-7-8.800v2.100c2.900.9 5 3.500 5 6.700zM4.300 3 3 4.300 7.700 9H3v6h4l5 5v-6.700l4.300 4.300c-.7.5-1.400.9-2.300 1.200v2.100a9 9 0 0 0 3.600-1.800l2.100 2.100 1.300-1.300L12 8zM12 4 9.900 6.100 12 8.200z"/></svg>'};
+
+/* ---------- link parsing ---------- */
+function parse(u){
+  u=u.trim();let m;
+  if(m=u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/|v\/))([\w-]{11})/))return{type:"youtube",id:m[1]};
+  if(/facebook\.com|fb\.watch|fb\.com/i.test(u))return{type:"facebook"};
+  if(/instagram\.com/i.test(u))return{type:"instagram"};
+  return{type:"direct"};
+}
+const igEmbed=u=>{const x=u.split("?")[0].replace(/\/$/,"");return x+"/embed"};
+const fbEmbed=u=>"https://www.facebook.com/plugins/video.php?show_text=false&href="+encodeURIComponent(u);
+const typeLbl={youtube:"YouTube",facebook:"Facebook",instagram:"Instagram",direct:"Video"};
+
+/* ---------- history / screens ---------- */
+const OV=["player","logs","mgr","add","me"];
+function show(s){
+  OV.forEach(k=>$("o-"+k).classList.toggle("on",k===s));
+  if(s!=="player"){stopPlayer();S.cur=null}
+  if(s==="logs")renderLogs();if(s==="mgr")renderMgr();if(s==="me")renderMe();
+}
+function go(s){history.pushState({s},"");show(s)}
+window.addEventListener("popstate",e=>{const s=e.state&&e.state.s;show(s==="player"&&!S.cur?null:s||null)});
+history.replaceState({s:null},"");
+document.querySelectorAll(".bk").forEach(b=>b.onclick=()=>history.back());
+$("pb").onclick=()=>history.back();
+
+/* ---------- auth ---------- */
+const loginOv=$("login");
+function applySession(){
+  const on=!!S.user;
+  loginOv.classList.toggle("on",!on);
+  if(on){const i=S.user[0];$("meav").textContent=i;$("meav2").textContent=i;renderTabs();render()}
+}
+async function doLogin(){
+  const u=$("lu").value.trim(),p=$("lp").value;$("le").textContent="";
+  if(!u||!p){$("le").textContent="Enter username and password.";return}
+  try{
+    if(u===MGR){if(p!==MPW){$("le").textContent="Wrong username or password.";return}}
+    else{const s=await get(ref(db,"users/"+u));if(!s.exists()||s.val().password!==p){$("le").textContent="Wrong username or password.";return}}
+    S.user=u;localStorage.setItem("vp_user",u);$("lp").value="";applySession();
+  }catch(e){$("le").textContent="Cannot connect. Check internet and database rules."}
+}
+$("lb").onclick=doLogin;$("lp").onkeydown=e=>{if(e.key==="Enter")doLogin()};
+function logout(msg){
+  S.user=null;S.cur=null;localStorage.removeItem("vp_user");
+  while(history.state&&history.state.s){history.back();break}
+  show(null);applySession();if(msg)toast(msg);
+}
+$("out").onclick=()=>logout("Logged out");
+
+/* ---------- firebase listeners ---------- */
+const listen=(k,path)=>onValue(ref(db,path),s=>{S[k]=s.val()||{};S.ready[k]=true;onData(k)},e=>toast("Database error: "+e.code));
+listen("users","users");listen("videos","videos");listen("likes","likes");listen("views","views");
+function onData(k){
+  if(k==="users"&&S.user&&S.user!==MGR&&!S.users[S.user]){logout("Your account was removed");return}
+  if(!S.user)return;
+  render();
+  if($("o-mgr").classList.contains("on"))renderMgr();
+  if($("o-logs").classList.contains("on"))renderLogs();
+  if(S.cur){if(!S.videos[S.cur])return gone();renderPinfo()}
+}
+function gone(){toast("Video was removed");S.cur=null;if($("o-player").classList.contains("on"))history.back()}
+
+/* ---------- feed ---------- */
+const TABS=[["home","Home"],["subs","Subs"],["music","Music"],["live","Live"],["more","More"]];
+function renderTabs(){$("tabs").innerHTML=TABS.map(([k,l])=>`<button class="tab ${S.tab===k?"on":""}" data-t="${k}">${l}</button>`).join("")}
+$("tabs").onclick=e=>{const t=e.target.closest("[data-t]");if(!t)return;
+  if(t.dataset.t==="more"){go("me");return}
+  S.tab=t.dataset.t;renderTabs();render();$("feed").scrollTop=0};
+document.querySelector(".nav").onclick=e=>{const b=e.target.closest("[data-n]");if(!b)return;const n=b.dataset.n;
+  if(n==="home"){S.tab="home";renderTabs();render();$("feed").scrollTop=0}
+  else if(n==="shorts"){S.tab="shorts";renderTabs();render()}
+  else if(n==="plus"){if(!isM())toast("Only the manager can add videos");else{$("au").value="";$("at").value="";$("ae").textContent="";go("add")}}
+  else if(n==="me")go("me")};
+const lkCount=id=>Object.keys(S.likes[id]||{}).length;
+const vwCount=id=>{let c=0;for(const k in S.views)if(S.views[k].vid===id)c++;return c};
+const prog=id=>parseFloat(localStorage.getItem(`vp_p_${S.user}_${id}`)||0);
+function render(){
+  if(!S.user)return;
+  let list=Object.entries(S.videos).map(([id,v])=>({id,...v})).sort((a,b)=>b.ts-a.ts);
+  const t=S.tab;
+  if(t==="subs")list=list.filter(v=>S.likes[v.id]&&S.likes[v.id][S.user]);
+  if(t==="music")list=list.filter(v=>v.type==="direct");
+  if(t==="live")list=list.filter(v=>v.type==="facebook");
+  if(t==="shorts")list=list.filter(v=>v.type==="instagram");
+  const f=$("feed");
+  if(!list.length){f.innerHTML=`<div class="empty">${t==="home"?(isM()?"No videos yet. Tap + to add a link.":"No videos yet. New videos from the manager appear here automatically."):"Nothing here yet."}</div>`;return}
+  f.innerHTML=list.map(v=>{
+    const liked=!!(S.likes[v.id]&&S.likes[v.id][S.user]),pr=Math.round(prog(v.id)*100);
+    let th;
+    if(v.type==="youtube")th=`<img loading="lazy" src="https://i.ytimg.com/vi/${esc(v.vid)}/hqdefault.jpg" alt="">`;
+    else if(v.type==="direct")th=`<video muted playsinline preload="metadata" src="${esc(v.url)}#t=0.5"></video>`;
+    else th=`<div class="ph ${v.type==="facebook"?"fb":"ig"}">${IC.play.replace("<svg","<svg style='width:44px;height:44px'")}${typeLbl[v.type]}</div>`;
+    return`<div class="card" data-id="${v.id}"><div class="th" data-act="open">${th}<span class="dur" data-d="${v.id}">${v.type==="youtube"||v.type==="direct"?"":typeLbl[v.type]}</span><div class="pg"><b style="width:${pr}%"></b></div></div>
+<div class="meta"><div class="av" style="background:hsl(${[...(v.channel||"x")].reduce((a,c)=>a+c.charCodeAt(0),0)%360},55%,42%)">${esc((v.channel||"V")[0])}</div><div style="min-width:0"><div class="ttl">${esc(v.title)}</div><div class="st">${esc(v.channel||"Video Player")} • ${kfmt(vwCount(v.id))} views • ${dshort(v.ts)}</div></div></div>
+<div class="acts"><button class="lk ${liked?"on":""}" data-act="like">${IC.like}${kfmt(lkCount(v.id))}</button><button data-act="cm">${IC.cm}</button>${isM()?`<button data-act="del" style="color:#ff6b6b;margin-left:auto">${IC.del}</button>`:""}</div></div>`}).join("");
+  f.querySelectorAll(".th video").forEach(el=>el.addEventListener("loadedmetadata",()=>{const d=f.querySelector(`[data-d="${el.closest(".card").dataset.id}"]`);if(d&&isFinite(el.duration))d.textContent=dur(el.duration)}));
+}
+$("feed").onclick=e=>{
+  const b=e.target.closest("[data-act]");if(!b)return;const id=b.closest(".card").dataset.id,a=b.dataset.act;
+  if(a==="open")openVideo(id);
+  else if(a==="like")toggleLike(id);
+  else if(a==="cm")toast("Comments are turned off");
+  else if(a==="del"&&isM()&&confirm("Delete this video for everyone?"))remove(ref(db,"videos/"+id)).then(()=>{remove(ref(db,"likes/"+id))}).catch(()=>toast("Delete failed"));
+};
+function toggleLike(id){const r=ref(db,`likes/${id}/${S.user}`);(S.likes[id]&&S.likes[id][S.user]?remove(r):set(r,true)).catch(()=>toast("Could not update like"))}
+
+/* ---------- player ---------- */
+let AD=null,iv=null,ytP=null;
+function stopPlayer(){
+  clearInterval(iv);iv=null;
+  try{ytP&&ytP.destroy&&ytP.destroy()}catch(e){}ytP=null;AD=null;
+  const pw=$("pw");const v=pw.querySelector("video");if(v){try{v.pause()}catch(e){}}pw.innerHTML="";$("ctl").style.display="none";
+  if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});
+}
+let ytLoad;const loadYT=()=>ytLoad||(ytLoad=new Promise(r=>{if(window.YT&&YT.Player)return r();const s=document.createElement("script");s.src="https://www.youtube.com/iframe_api";window.onYouTubeIframeAPIReady=r;document.head.appendChild(s)}));
+function openVideo(id){
+  const v=S.videos[id];if(!v)return;
+  S.cur=id;go("player");
+  const t=Date.now();
+  push(ref(db,"views"),{user:S.user,vid:id,title:v.title,ts:t,label:fmt(t)}).catch(()=>{});
+  renderPinfo();stopPlayer();
+  const pw=$("pw");
+  if(v.type==="instagram"){pw.innerHTML=`<iframe src="${esc(igEmbed(v.url))}" allowfullscreen allow="autoplay;encrypted-media;fullscreen"></iframe>`;return}
+  if(v.type==="facebook"){pw.innerHTML=`<iframe src="${esc(fbEmbed(v.url))}" allowfullscreen allow="autoplay;clipboard-write;encrypted-media;picture-in-picture;web-share;fullscreen"></iframe>`;return}
+  $("ctl").style.display="flex";
+  if(v.type==="direct"){
+    pw.innerHTML=`<video playsinline autoplay src="${esc(v.url)}"></video><div class="tap"></div>`;
+    const el=pw.querySelector("video");
+    AD={play:()=>el.play(),pause:()=>el.pause(),seek:x=>el.currentTime=x,time:()=>el.currentTime,dur:()=>el.duration||0,mute:m=>el.muted=m,rate:r=>el.playbackRate=r,playing:()=>!el.paused,muted:()=>el.muted};
+    el.onerror=()=>toast("Cannot play this link");
+    resume(id);bindCtl(id);
+  }else{
+    pw.innerHTML=`<div id="yt"></div><div class="tap"></div>`;
+    loadYT().then(()=>{
+      if(S.cur!==id)return;
+      ytP=new YT.Player("yt",{videoId:v.vid,playerVars:{controls:0,playsinline:1,rel:0,modestbranding:1,autoplay:1,fs:0,iv_load_policy:3},events:{
+        onReady:()=>{if(S.cur!==id||!ytP)return;AD={play:()=>ytP.playVideo(),pause:()=>ytP.pauseVideo(),seek:x=>ytP.seekTo(x,true),time:()=>ytP.getCurrentTime(),dur:()=>ytP.getDuration(),mute:m=>m?ytP.mute():ytP.unMute(),rate:r=>ytP.setPlaybackRate(r),playing:()=>ytP.getPlayerState()===1,muted:()=>ytP.isMuted()};
+          const sp=prog(id);if(sp>0&&sp<.97){const d=ytP.getDuration();if(d)ytP.seekTo(sp*d,true)}
+          bindCtl(id);ytP.playVideo()},
+        onError:()=>toast("This video cannot be played here")}})});
+  }
+}
+function resume(id){const el=$("pw").querySelector("video"),sp=prog(id);el.addEventListener("loadedmetadata",()=>{if(sp>0&&sp<.97)el.currentTime=sp*el.duration},{once:true})}
+let rates=[.5,1,1.25,1.5,2],ri=1;
+function bindCtl(id){
+  ri=1;$("c-sp").textContent="1x";let seeking=false;
+  const up=()=>{if(!AD)return;const d=AD.dur(),t=AD.time();
+    $("c-pp").innerHTML=AD.playing()?IC.pause:IC.play;$("c-mu").innerHTML=AD.muted()?IC.mute:IC.vol;
+    if(d){if(!seeking)$("sk").value=Math.round(t/d*1000);$("tm").textContent=dur(t)+" / "+dur(d);
+      const f=Math.min(1,t/d);localStorage.setItem(`vp_p_${S.user}_${id}`,f);
+      const dd=document.querySelector(`[data-d="${id}"]`);if(dd&&!dd.textContent)dd.textContent=dur(d);
+      const pb=document.querySelector(`.card[data-id="${id}"] .pg b`);if(pb)pb.style.width=f*100+"%"}};
+  clearInterval(iv);iv=setInterval(up,400);up();
+  const sk=$("sk");
+  sk.oninput=()=>{seeking=true;const d=AD&&AD.dur();if(d)$("tm").textContent=dur(sk.value/1000*d)+" / "+dur(d)};
+  sk.onchange=()=>{const d=AD&&AD.dur();if(d)AD.seek(sk.value/1000*d);seeking=false};
+  const tog=()=>{if(!AD)return;AD.playing()?AD.pause():AD.play();setTimeout(up,150)};
+  $("c-pp").onclick=tog;$("pw").querySelector(".tap").onclick=tog;
+  $("c-rw").onclick=()=>AD&&AD.seek(Math.max(0,AD.time()-10));
+  $("c-ff").onclick=()=>AD&&AD.seek(Math.min(AD.dur()||1e9,AD.time()+10));
+  $("c-mu").onclick=()=>{if(!AD)return;AD.mute(!AD.muted());setTimeout(up,100)};
+  $("c-sp").onclick=()=>{ri=(ri+1)%rates.length;AD&&AD.rate(rates[ri]);$("c-sp").textContent=rates[ri]+"x"};
+  $("c-fs").onclick=()=>{const w=$("pw");document.fullscreenElement?document.exitFullscreen():(w.requestFullscreen||w.webkitRequestFullscreen||(()=>{})).call(w)};
+}
+function renderPinfo(){
+  const v=S.videos[S.cur];if(!v)return;
+  const liked=!!(S.likes[S.cur]&&S.likes[S.cur][S.user]);
+  $("pinfo").innerHTML=`<h2>${esc(v.title)}</h2><div class="st">${esc(v.channel||"Video Player")} • ${kfmt(vwCount(S.cur))} views • ${dshort(v.ts)}</div>
+<div class="acts"><button class="lk ${liked?"on":""}" id="plk">${IC.like}${kfmt(lkCount(S.cur))}</button><button id="pcm">${IC.cm}</button>${v.type==="instagram"||v.type==="facebook"?`<span style="color:var(--mu);font-size:12px;align-self:center">Controls are provided by ${typeLbl[v.type]}</span>`:""}</div>`;
+  $("plk").onclick=()=>toggleLike(S.cur);$("pcm").onclick=()=>toast("Comments are turned off");
+}
+
+/* ---------- add video ---------- */
+$("aok").onclick=async()=>{
+  const url=$("au").value.trim();let title=$("at").value.trim();$("ae").textContent="";
+  if(!/^https?:\/\//i.test(url)){$("ae").textContent="Enter a full link starting with http:// or https://";return}
+  const pr=parse(url);let channel=typeLbl[pr.type]==="Video"?"Direct video":typeLbl[pr.type];
+  $("aok").textContent="Adding...";
+  if(pr.type==="youtube"){try{const r=await fetch("https://noembed.com/embed?url="+encodeURIComponent(url));const j=await r.json();if(j.title&&!title)title=j.title;if(j.author_name)channel=j.author_name}catch(e){}}
+  if(!title)title=pr.type==="direct"?decodeURIComponent((url.split("?")[0].split("/").pop()||"Video")):typeLbl[pr.type]+" video";
+  try{await push(ref(db,"videos"),{url,type:pr.type,vid:pr.id||null,title,channel,by:S.user,ts:Date.now()});history.back();toast("Video added")}
+  catch(e){$("ae").textContent="Could not save. Check database rules."}
+  $("aok").textContent="Add video";
+};
+
+/* ---------- manager ---------- */
+function renderMe(){$("mename").textContent=S.user||"";$("merole").textContent=isM()?"Manager":"User";$("mgr").style.display=$("mlogs").style.display=isM()?"":"none"}
+$("mgr").onclick=()=>go("mgr");$("mlogs").onclick=()=>go("logs");$("nlogs").onclick=()=>go("logs");
+function renderMgr(){
+  const us=Object.entries(S.users).sort((a,b)=>(a[1].createdAt||0)-(b[1].createdAt||0));
+  $("ulist").innerHTML=`<div class="row"><span class="av">${MGR[0]}</span><div class="g"><div class="n">${MGR}</div><div class="s">Manager (permanent)</div></div></div>`+
+  us.map(([n,u])=>`<div class="row"><span class="av">${esc(n[0])}</span><div class="g"><div class="n">${esc(n)}</div><div class="s">Password: ${esc(u.password)}</div></div><button class="x" data-u="${esc(n)}" aria-label="Remove">${IC.del}</button></div>`).join("");
+}
+$("ulist").onclick=e=>{const b=e.target.closest("[data-u]");if(!b||!isM())return;const n=b.dataset.u;
+  if(confirm(`Remove user "${n}"?`))remove(ref(db,"users/"+n)).catch(()=>toast("Remove failed"))};
+$("nadd").onclick=async()=>{
+  if(!isM())return;const u=$("nu").value.trim(),p=$("np").value;$("me2").textContent="";
+  if(!u||!p){$("me2").textContent="Enter username and password.";return}
+  if(/[.#$\[\]\/\s]/.test(u)){$("me2").textContent="Username cannot contain spaces or . # $ [ ] /";return}
+  if(u.toLowerCase()===MGR||S.users[u]){$("me2").textContent="That username already exists.";return}
+  try{await set(ref(db,"users/"+u),{password:p,createdAt:Date.now()});$("nu").value="";$("np").value="";toast("User created")}
+  catch(e){$("me2").textContent="Could not save. Check database rules."}
+};
+$("nall").onclick=()=>{if(isM()&&confirm("Remove ALL users? zamir stays."))remove(ref(db,"users")).then(()=>toast("All users removed")).catch(()=>toast("Remove failed"))};
+
+/* ---------- logs ---------- */
+function renderLogs(){
+  const L=Object.values(S.views).sort((a,b)=>b.ts-a.ts);
+  if(!isM()){$("logs").innerHTML='<div class="empty">Only the manager can view history.</div>';return}
+  $("logs").innerHTML=L.length?L.map(l=>`<div class="lgrow"><span class="av">${esc((l.user||"?")[0])}</span><div style="min-width:0"><div class="n" style="font-weight:600">${esc(l.user)}</div><div class="ttl" style="font-size:13px;color:#ddd">${esc(l.title)}</div><div class="tmx">${esc(l.label||fmt(l.ts))}</div></div></div>`).join(""):'<div class="empty">No views yet.</div>';
+}
+
+/* ---------- start ---------- */
+$("bell").onclick=()=>toast("No new notifications");
+if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+applySession();
+</script>
 </body>
 </html>
