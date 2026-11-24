@@ -15,8 +15,9 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font-family:Roboto,"Segoe UI",system-ui,Arial,sans-serif;overflow:hidden}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
-input{font:inherit;color:var(--tx);background:var(--ch);border:1px solid var(--ch2);border-radius:10px;padding:12px 14px;width:100%;outline:0}
-input:focus{border-color:#3ea6ff}
+input,select{font:inherit;color:var(--tx);background:var(--ch);border:1px solid var(--ch2);border-radius:10px;padding:12px 14px;width:100%;outline:0}
+input:focus,select:focus{border-color:#3ea6ff}
+select option{background:#212121}
 svg{width:24px;height:24px;fill:currentColor;flex:none}
 #app{position:fixed;inset:0;display:flex;flex-direction:column;padding-top:var(--sa)}
 .top{display:flex;align-items:center;justify-content:space-between;padding:10px 12px}
@@ -32,7 +33,7 @@ svg{width:24px;height:24px;fill:currentColor;flex:none}
 .th{position:relative;aspect-ratio:16/9;background:#222;overflow:hidden;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .th img,.th video{width:100%;height:100%;object-fit:cover;pointer-events:none}
 .th .ph{font-size:15px;font-weight:600;color:#fff;text-align:center;width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px}
-.ph.fb{background:linear-gradient(135deg,#1877f2,#0b3d91)}.ph.ig{background:linear-gradient(135deg,#f58529,#dd2a7b 50%,#515bd4)}.ph.mp{background:linear-gradient(135deg,#333,#111)}
+.ph.fb{background:linear-gradient(135deg,#1877f2,#0b3d91)}.ph.ig{background:linear-gradient(135deg,#f58529,#dd2a7b 50%,#515bd4)}
 .dur{position:absolute;right:8px;bottom:10px;background:rgba(0,0,0,.8);font-size:12px;font-weight:500;padding:2px 5px;border-radius:4px}
 .pg{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.3)}
 .pg b{display:block;height:100%;background:var(--red);width:0}
@@ -64,22 +65,61 @@ svg{width:24px;height:24px;fill:currentColor;flex:none}
 .lg{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:24px;gap:12px;max-width:420px;width:100%;margin:0 auto}
 .lg .logo{font-size:32px;margin-bottom:12px}.lg .logo i{width:48px;height:34px}.lg .logo i:after{left:19px;top:8px;border-left:14px solid #fff;border-top:9px solid transparent;border-bottom:9px solid transparent}
 .err{color:#ff6b6b;font-size:13px;min-height:18px}
-.pw{position:relative;background:#000;aspect-ratio:16/9;width:100%}
+/* player */
+.pw{position:relative;background:#000;aspect-ratio:16/9;width:100%;overflow:hidden;flex:none}
+.pw.v{aspect-ratio:9/16;width:auto;height:min(56vh,177.78vw);max-width:100%;align-self:center}
 .pw iframe,.pw video,.pw #yt{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+.pw video{object-fit:contain}
+.pw iframe.ig{inset:auto;left:0;top:-56px;height:calc(100% + 220px)}
 .pw .tap{position:absolute;inset:0;z-index:2}
-.pw:fullscreen{aspect-ratio:auto;height:100%}
+.pw .mk{display:none;position:absolute;inset:0;z-index:3;background:#000 center/cover no-repeat;align-items:center;justify-content:center;cursor:pointer}
+.pw .mk svg{width:64px;height:64px;background:rgba(0,0,0,.6);border-radius:50%;padding:12px}
+.pw.paused .mk{display:flex}
+#o-player:fullscreen{padding-top:0;background:#000}
+#o-player:fullscreen .hd,#o-player:fullscreen .pinfo,#o-player:fullscreen .cform{display:none}
+#o-player:fullscreen .pw,#o-player:fullscreen .pw.v{flex:1;width:100%;max-width:none;height:auto;aspect-ratio:auto;min-height:0}
+#o-player:fullscreen .tap,#o-player:fullscreen .mk{display:none!important}
+#o-player:fullscreen .pw iframe.ig{top:0;height:100%}
 .ctl{display:flex;flex-direction:column;gap:4px;padding:6px 10px;background:#161616}
 .ctl .r{display:flex;align-items:center;gap:4px}
 .ctl .r button{padding:6px;border-radius:8px;display:flex;align-items:center;gap:2px;font-size:12px}
 .ctl input[type=range]{padding:0;border:0;background:none;accent-color:var(--red);height:20px}
+.ctl.emb #sk,.ctl.emb .r>:not(#c-fs){display:none}
+.ctl.emb .r{justify-content:flex-end}
 .tm{font-size:12px;color:#ddd;min-width:92px}
-.pinfo{flex:1;overflow-y:auto;padding:12px}
+.pinfo{flex:1;overflow-y:auto;padding:12px;min-height:0}
 .pinfo h2{font-size:17px;margin:0 0 6px;font-weight:600;line-height:1.3;word-break:break-word}
-.pinfo .acts{padding:12px 0}
-.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#e8e8e8;color:#000;padding:10px 16px;border-radius:8px;font-size:14px;z-index:99;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90%}
+.pinfo .acts{padding:12px 0 0}
+.at{display:flex;gap:8px;margin:14px 0 4px;overflow-x:auto;scrollbar-width:none}
+.at button{background:var(--ch);padding:7px 13px;border-radius:9px;font-size:13px;font-weight:500;white-space:nowrap}
+.at button.on{background:var(--tx);color:#000}
+.cform{display:none;gap:8px;padding:8px 10px calc(8px + var(--sb));border-top:1px solid #272727;background:var(--bg)}
+.cform input{padding:10px 14px;border-radius:22px}
+.cform .btn{padding:10px 16px}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#e8e8e8;color:#000;padding:10px 16px;border-radius:8px;font-size:14px;z-index:300;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90%}
 .toast.on{opacity:1}
 .lgrow{padding:10px 0;border-bottom:1px solid #1d1d1d;display:flex;gap:12px;align-items:flex-start}
 .lgrow .tmx{font-size:13px;color:#7fd1ff;margin-top:3px;font-variant-numeric:tabular-nums}
+.bd{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:6px;margin-left:6px;vertical-align:middle;background:#2a2a2a;color:#ddd}
+.bd.l{background:#12304d;color:#7fd1ff}.bd.c{background:#2d2a12;color:#ffd75e}.bd.v{background:#1f2f1f;color:#8fe08f}
+.cmt{font-size:14px;color:#eee;margin-top:2px;word-break:break-word;white-space:pre-wrap}
+/* manage videos */
+.vm{background:#181818;border:1px solid #262626;border-radius:14px;padding:12px;margin-bottom:12px;display:flex;flex-direction:column;gap:8px}
+.vmh{display:flex;gap:10px;align-items:center;font-size:12px;color:var(--mu)}
+.vth{width:72px;aspect-ratio:16/9;border-radius:6px;background:#222;overflow:hidden;flex:none;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff}
+.vth img{width:100%;height:100%;object-fit:cover}
+.vth.fb{background:linear-gradient(135deg,#1877f2,#0b3d91)}.vth.ig{background:linear-gradient(135deg,#f58529,#dd2a7b 50%,#515bd4)}
+.vm label{font-size:11px;color:var(--mu);margin-bottom:-4px}
+.vb{display:flex;gap:8px;margin-top:4px}.vb .btn{flex:1;padding:10px 6px}
+/* install banner */
+.ib{position:fixed;left:10px;right:10px;bottom:calc(10px + var(--sb));z-index:200;background:#14141f;border:1px solid #2a2a3a;border-radius:18px;padding:12px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 30px rgba(0,0,0,.6);transform:translateY(150%);transition:transform .35s ease;visibility:hidden}
+.ib.on{transform:none;visibility:visible}
+.ib img{width:52px;height:52px;border-radius:14px;flex:none}
+.ib .it{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ib .it b{font-size:15px}.ib .it span{font-size:12px;color:#aaa;line-height:1.25}
+.ib .no{color:#bbb;font-weight:600;font-size:13px;padding:8px 6px}
+.ib .yes{background:var(--red);color:#fff;font-weight:700;font-size:14px;padding:10px 16px;border-radius:12px}
+#ih{z-index:210}
 </style>
 </head>
 <body>
@@ -94,16 +134,12 @@ svg{width:24px;height:24px;fill:currentColor;flex:none}
 </div>
 
 <div id="app">
-  <div class="top">
-    <div class="logo"><i></i>YouTube</div>
-    <div style="display:flex;gap:6px"><button id="bell" aria-label="Notifications"><svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 0 0 2 2zm6-6v-5c0-3.1-1.6-5.6-4.5-6.3V4a1.5 1.5 0 0 0-3 0v.7C7.6 5.4 6 7.9 6 11v5l-2 2v1h16v-1l-2-2z"/></svg></button></div>
-  </div>
+  <div class="top"><div class="logo"><i></i>YouTube</div></div>
   <div class="tabs" id="tabs"></div>
   <div id="feed"></div>
   <div class="nav">
     <button data-n="home"><svg viewBox="0 0 24 24"><path d="M4 21V9l8-6 8 6v12h-6v-7h-4v7z"/></svg>Home</button>
-    <button data-n="shorts"><svg viewBox="0 0 24 24"><path d="M17.8 8.4 8.6 3.3a3.3 3.3 0 0 0-3.2 5.7l1 .5-1 .5a3.3 3.3 0 0 0 .4 6l9.2 5.1a3.3 3.3 0 0 0 3.2-5.7l-1-.5 1-.5a3.3 3.3 0 0 0-.4-6zM10 14.6V9.4l4.5 2.6z"/></svg>Shorts</button>
-    <button data-n="plus" class="plus" aria-label="Add video"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"/></svg></button>
+    <button data-n="plus" class="plus" id="navplus" aria-label="Add video"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"/></svg></button>
     <button data-n="me" class="me"><span class="av" id="meav"></span>You</button>
   </div>
 </div>
@@ -123,12 +159,21 @@ svg{width:24px;height:24px;fill:currentColor;flex:none}
       <button id="c-fs" aria-label="Fullscreen"><svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7zm-2-4h2V7h3V5H5zm12 7h-3v2h5v-5h-2zM14 5v2h3v3h2V5z"/></svg></button>
     </div>
   </div>
-  <div class="pinfo" id="pinfo"></div>
+  <div class="pinfo" id="pinfo"><div id="pi-top"></div><div class="at" id="atabs"></div><div id="pi-list"></div></div>
+  <div class="cform" id="cform"><input id="ci" placeholder="Add a comment..." maxlength="300" autocomplete="off"><button class="btn red" id="cs">Post</button></div>
 </div>
 
 <div id="o-logs" class="ov">
-  <div class="hd"><button class="bk" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20z"/></svg></button>Watch history</div>
+  <div class="hd"><button class="bk" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20z"/></svg></button>Activity logs</div>
   <div class="body" id="logs"></div>
+</div>
+
+<div id="o-vids" class="ov">
+  <div class="hd"><button class="bk" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20z"/></svg></button>Manage videos</div>
+  <div class="body">
+    <button class="btn red" id="vadd" style="width:100%;margin-bottom:14px">+ Add new video</button>
+    <div id="vlist"></div>
+  </div>
 </div>
 
 <div id="o-mgr" class="ov">
@@ -139,7 +184,8 @@ svg{width:24px;height:24px;fill:currentColor;flex:none}
       <input id="np" placeholder="New password">
       <div class="err" id="me2"></div>
       <button class="btn red" id="nadd">Create user</button>
-      <button class="btn gh" id="nlogs">View watch history</button>
+      <button class="btn gh" id="nvids">Manage videos</button>
+      <button class="btn gh" id="nlogs">Activity logs</button>
       <button class="btn gh" id="nall" style="color:#ff6b6b">Remove all users</button>
     </div>
     <div id="ulist"></div>
@@ -150,6 +196,7 @@ svg{width:24px;height:24px;fill:currentColor;flex:none}
   <div style="font-weight:600;font-size:17px">Add video link</div>
   <input id="au" placeholder="YouTube, Facebook, Instagram or MP4 link" autocapitalize="none" autocorrect="off">
   <input id="at" placeholder="Title (optional)">
+  <select id="ar"><option value="auto">Shape: Auto (Reel/Short = 9:16, else 16:9)</option><option value="9:16">Shape: Vertical 9:16</option><option value="16:9">Shape: Landscape 16:9</option></select>
   <div class="err" id="ae"></div>
   <button class="btn red" id="aok">Add video</button>
   <button class="btn gh bk">Cancel</button>
@@ -157,11 +204,25 @@ svg{width:24px;height:24px;fill:currentColor;flex:none}
 
 <div id="o-me" class="ov sheet"><div class="box">
   <div class="row" style="border:0"><span class="av" id="meav2"></span><div class="g"><div class="n" id="mename"></div><div class="s" id="merole"></div></div></div>
-  <button class="btn gh" id="mgr">Manager panel</button>
-  <button class="btn gh" id="mlogs">Watch history</button>
+  <button class="btn gh mo" id="mvids">Manage videos</button>
+  <button class="btn gh mo" id="mgr">Manager panel</button>
+  <button class="btn gh mo" id="mlogs">Activity logs</button>
   <button class="btn red" id="out">Log out</button>
   <button class="btn gh bk">Close</button>
 </div></div>
+
+<div id="ih" class="ov sheet" style="display:none"><div class="box">
+  <div style="font-weight:600;font-size:17px">Install Video Player</div>
+  <div id="iht" style="color:#ddd;line-height:1.5;font-size:14px"></div>
+  <button class="btn gh" id="ihc">OK</button>
+</div></div>
+
+<div class="ib" id="ib">
+  <img src="icon-192.png" alt="">
+  <div class="it"><b>Video Player</b><span>Install app · fast &amp; works offline</span></div>
+  <button class="no" id="inn">Not now</button>
+  <button class="yes" id="iy">Install</button>
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -172,19 +233,18 @@ const app=initializeApp({apiKey:"AIzaSyBdzrc8lmNbv-7NTl2dy70RWY6Vq0kFqoI",authDo
 const db=getDatabase(app);
 const $=id=>document.getElementById(id);
 const MGR="zamir",MPW="admin";
-const S={user:localStorage.getItem("vp_user")||null,users:{},videos:{},likes:{},views:{},tab:"home",cur:null,ad:null,ready:{}};
+const S={user:localStorage.getItem("vp_user")||null,users:{},videos:{},likes:{},views:{},tab:"home",cur:null,ptab:"c",lf:"all",vsig:"",ready:{}};
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const isM=()=>S.user===MGR;
 const MO=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const p2=n=>String(n).padStart(2,"0");
-function fmt(t){const d=new Date(t);let h=d.getHours();const ap=h>=12?"PM":"AM";h=h%12||12;return`${p2(h)}:${p2(d.getMinutes())}:${p2(d.getSeconds())} ${ap} • ${MO[d.getMonth()]} ${p2(d.getDate())}, ${d.getFullYear()}`}
+function fmt(t){if(!t)return"Time not recorded";const d=new Date(t);let h=d.getHours();const ap=h>=12?"PM":"AM";h=h%12||12;return`${p2(h)}:${p2(d.getMinutes())}:${p2(d.getSeconds())} ${ap} • ${MO[d.getMonth()]} ${p2(d.getDate())}, ${d.getFullYear()}`}
 const dshort=t=>{const d=new Date(t);return`${MO[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`};
 const dur=s=>{s=Math.max(0,Math.floor(s||0));const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return(h?h+":"+p2(m):m)+":"+p2(s%60)};
 const kfmt=n=>n>=1e6?(n/1e6).toFixed(1)+"M":n>=1e3?(n/1e3).toFixed(1)+"K":String(n);
 let tt;function toast(m){const t=$("toast");t.textContent=m;t.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("on"),2200)}
 const IC={like:'<svg viewBox="0 0 24 24"><path d="M1 21h4V9H1zm22-11a2 2 0 0 0-2-2h-6.3l1-4.6v-.3c0-.4-.2-.8-.4-1.1L14.2 1 7.6 7.6C7.2 8 7 8.500 7 9v10a2 2 0 0 0 2 2h9c.8 0 1.500-.5 1.800-1.200l3-7c.1-.3.200-.5.200-.8z"/></svg>',
 cm:'<svg viewBox="0 0 24 24"><path d="M21.990 4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v18l4-4h14c1.100 0 2-.9 2-2zM18 14H6v-2h12zm0-3H6V9h12zm0-3H6V6h12z"/></svg>',
-del:'<svg viewBox="0 0 24 24"><path d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6zM19 4h-3.500l-1-1h-5l-1 1H5v2h14z"/></svg>',
 play:'<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>',pause:'<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6zm8-14v14h4V5z"/></svg>',
 vol:'<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9zm13.500 3A4.500 4.500 0 0 0 14 7.970v8.050c1.500-.7 2.500-2.200 2.500-4.020z"/></svg>',
 mute:'<svg viewBox="0 0 24 24"><path d="M16.500 12A4.500 4.500 0 0 0 14 7.970v2.210l2.450 2.450c.03-.2.050-.4.050-.63zm2.500 0c0 .9-.2 1.800-.5 2.600l1.500 1.500A9 9 0 0 0 21 12c0-4.300-3-7.900-7-8.800v2.100c2.900.9 5 3.500 5 6.700zM4.300 3 3 4.300 7.700 9H3v6h4l5 5v-6.700l4.300 4.300c-.7.5-1.400.9-2.300 1.200v2.100a9 9 0 0 0 3.600-1.800l2.100 2.100 1.300-1.300L12 8zM12 4 9.900 6.100 12 8.200z"/></svg>'};
@@ -200,13 +260,20 @@ function parse(u){
 const igEmbed=u=>{const x=u.split("?")[0].replace(/\/$/,"");return x+"/embed"};
 const fbEmbed=u=>"https://www.facebook.com/plugins/video.php?show_text=false&href="+encodeURIComponent(u);
 const typeLbl={youtube:"YouTube",facebook:"Facebook",instagram:"Instagram",direct:"Video"};
+function guessV(u,t){
+  if(t==="youtube")return/youtube\.com\/shorts\//i.test(u);
+  if(t==="instagram")return!/instagram\.com\/(?:[^/]+\/)?tv\//i.test(u);
+  if(t==="facebook")return/\/reels?\/|\/share\/r\/|fb\.watch\/reel/i.test(u);
+  return false;
+}
+const isVert=v=>v.ratio==="9:16"?true:v.ratio==="16:9"?false:guessV(v.url||"",v.type);
 
 /* ---------- history / screens ---------- */
-const OV=["player","logs","mgr","add","me"];
+const OV=["player","logs","mgr","vids","add","me"];
 function show(s){
   OV.forEach(k=>$("o-"+k).classList.toggle("on",k===s));
   if(s!=="player"){stopPlayer();S.cur=null}
-  if(s==="logs")renderLogs();if(s==="mgr")renderMgr();if(s==="me")renderMe();
+  if(s==="logs")renderLogs();if(s==="mgr")renderMgr();if(s==="me")renderMe();if(s==="vids")renderVids();
 }
 function go(s){history.pushState({s},"");show(s)}
 window.addEventListener("popstate",e=>{const s=e.state&&e.state.s;show(s==="player"&&!S.cur?null:s||null)});
@@ -219,7 +286,7 @@ const loginOv=$("login");
 function applySession(){
   const on=!!S.user;
   loginOv.classList.toggle("on",!on);
-  if(on){const i=S.user[0];$("meav").textContent=i;$("meav2").textContent=i;renderTabs();render()}
+  if(on){const i=S.user[0];$("meav").textContent=i;$("meav2").textContent=i;$("navplus").style.visibility=isM()?"visible":"hidden";renderTabs();render()}
 }
 async function doLogin(){
   const u=$("lu").value.trim(),p=$("lp").value;$("le").textContent="";
@@ -241,38 +308,37 @@ $("out").onclick=()=>logout("Logged out");
 /* ---------- firebase listeners ---------- */
 const listen=(k,path)=>onValue(ref(db,path),s=>{S[k]=s.val()||{};S.ready[k]=true;onData(k)},e=>toast("Database error: "+e.code));
 listen("users","users");listen("videos","videos");listen("likes","likes");listen("views","views");
+const sigOf=()=>Object.keys(S.videos).sort().join();
 function onData(k){
   if(k==="users"&&S.user&&S.user!==MGR&&!S.users[S.user]){logout("Your account was removed");return}
   if(!S.user)return;
   render();
   if($("o-mgr").classList.contains("on"))renderMgr();
   if($("o-logs").classList.contains("on"))renderLogs();
+  if($("o-vids").classList.contains("on")&&k==="videos"&&sigOf()!==S.vsig)renderVids();
   if(S.cur){if(!S.videos[S.cur])return gone();renderPinfo()}
 }
 function gone(){toast("Video was removed");S.cur=null;if($("o-player").classList.contains("on"))history.back()}
 
 /* ---------- feed ---------- */
-const TABS=[["home","Home"],["subs","Subs"],["music","Music"],["live","Live"],["more","More"]];
+const TABS=[["home","Home"],["shorts","Shorts & Reels"],["liked","Liked"]];
 function renderTabs(){$("tabs").innerHTML=TABS.map(([k,l])=>`<button class="tab ${S.tab===k?"on":""}" data-t="${k}">${l}</button>`).join("")}
-$("tabs").onclick=e=>{const t=e.target.closest("[data-t]");if(!t)return;
-  if(t.dataset.t==="more"){go("me");return}
-  S.tab=t.dataset.t;renderTabs();render();$("feed").scrollTop=0};
+$("tabs").onclick=e=>{const t=e.target.closest("[data-t]");if(!t)return;S.tab=t.dataset.t;renderTabs();render();$("feed").scrollTop=0};
 document.querySelector(".nav").onclick=e=>{const b=e.target.closest("[data-n]");if(!b)return;const n=b.dataset.n;
   if(n==="home"){S.tab="home";renderTabs();render();$("feed").scrollTop=0}
-  else if(n==="shorts"){S.tab="shorts";renderTabs();render()}
-  else if(n==="plus"){if(!isM())toast("Only the manager can add videos");else{$("au").value="";$("at").value="";$("ae").textContent="";go("add")}}
+  else if(n==="plus"){if(!isM())toast("Only the manager can add videos");else openAdd()}
   else if(n==="me")go("me")};
+function openAdd(){$("au").value="";$("at").value="";$("ar").value="auto";$("ae").textContent="";go("add")}
 const lkCount=id=>Object.keys(S.likes[id]||{}).length;
+const cmCount=id=>Object.keys((S.videos[id]||{}).comments||{}).length;
 const vwCount=id=>{let c=0;for(const k in S.views)if(S.views[k].vid===id)c++;return c};
 const prog=id=>parseFloat(localStorage.getItem(`vp_p_${S.user}_${id}`)||0);
 function render(){
   if(!S.user)return;
   let list=Object.entries(S.videos).map(([id,v])=>({id,...v})).sort((a,b)=>b.ts-a.ts);
   const t=S.tab;
-  if(t==="subs")list=list.filter(v=>S.likes[v.id]&&S.likes[v.id][S.user]);
-  if(t==="music")list=list.filter(v=>v.type==="direct");
-  if(t==="live")list=list.filter(v=>v.type==="facebook");
-  if(t==="shorts")list=list.filter(v=>v.type==="instagram");
+  if(t==="liked")list=list.filter(v=>S.likes[v.id]&&S.likes[v.id][S.user]);
+  if(t==="shorts")list=list.filter(v=>isVert(v));
   const f=$("feed");
   if(!list.length){f.innerHTML=`<div class="empty">${t==="home"?(isM()?"No videos yet. Tap + to add a link.":"No videos yet. New videos from the manager appear here automatically."):"Nothing here yet."}</div>`;return}
   f.innerHTML=list.map(v=>{
@@ -283,17 +349,16 @@ function render(){
     else th=`<div class="ph ${v.type==="facebook"?"fb":"ig"}">${IC.play.replace("<svg","<svg style='width:44px;height:44px'")}${typeLbl[v.type]}</div>`;
     return`<div class="card" data-id="${v.id}"><div class="th" data-act="open">${th}<span class="dur" data-d="${v.id}">${v.type==="youtube"||v.type==="direct"?"":typeLbl[v.type]}</span><div class="pg"><b style="width:${pr}%"></b></div></div>
 <div class="meta"><div class="av" style="background:hsl(${[...(v.channel||"x")].reduce((a,c)=>a+c.charCodeAt(0),0)%360},55%,42%)">${esc((v.channel||"V")[0])}</div><div style="min-width:0"><div class="ttl">${esc(v.title)}</div><div class="st">${esc(v.channel||"Video Player")} • ${kfmt(vwCount(v.id))} views • ${dshort(v.ts)}</div></div></div>
-<div class="acts"><button class="lk ${liked?"on":""}" data-act="like">${IC.like}${kfmt(lkCount(v.id))}</button><button data-act="cm">${IC.cm}</button>${isM()?`<button data-act="del" style="color:#ff6b6b;margin-left:auto">${IC.del}</button>`:""}</div></div>`}).join("");
+<div class="acts"><button class="lk ${liked?"on":""}" data-act="like">${IC.like}${kfmt(lkCount(v.id))}</button><button data-act="cm">${IC.cm}${kfmt(cmCount(v.id))}</button></div></div>`}).join("");
   f.querySelectorAll(".th video").forEach(el=>el.addEventListener("loadedmetadata",()=>{const d=f.querySelector(`[data-d="${el.closest(".card").dataset.id}"]`);if(d&&isFinite(el.duration))d.textContent=dur(el.duration)}));
 }
 $("feed").onclick=e=>{
   const b=e.target.closest("[data-act]");if(!b)return;const id=b.closest(".card").dataset.id,a=b.dataset.act;
   if(a==="open")openVideo(id);
   else if(a==="like")toggleLike(id);
-  else if(a==="cm")toast("Comments are turned off");
-  else if(a==="del"&&isM()&&confirm("Delete this video for everyone?"))remove(ref(db,"videos/"+id)).then(()=>{remove(ref(db,"likes/"+id))}).catch(()=>toast("Delete failed"));
+  else if(a==="cm")openVideo(id,"c");
 };
-function toggleLike(id){const r=ref(db,`likes/${id}/${S.user}`);(S.likes[id]&&S.likes[id][S.user]?remove(r):set(r,true)).catch(()=>toast("Could not update like"))}
+function toggleLike(id){const r=ref(db,`likes/${id}/${S.user}`);(S.likes[id]&&S.likes[id][S.user]?remove(r):set(r,Date.now())).catch(()=>toast("Could not update like"))}
 
 /* ---------- player ---------- */
 let AD=null,iv=null,ytP=null;
@@ -304,34 +369,39 @@ function stopPlayer(){
   if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});
 }
 let ytLoad;const loadYT=()=>ytLoad||(ytLoad=new Promise(r=>{if(window.YT&&YT.Player)return r();const s=document.createElement("script");s.src="https://www.youtube.com/iframe_api";window.onYouTubeIframeAPIReady=r;document.head.appendChild(s)}));
-function openVideo(id){
+function openVideo(id,tab){
   const v=S.videos[id];if(!v)return;
-  S.cur=id;go("player");
+  S.cur=id;S.ptab=tab||"c";go("player");
   const t=Date.now();
   push(ref(db,"views"),{user:S.user,vid:id,title:v.title,ts:t,label:fmt(t)}).catch(()=>{});
   renderPinfo();stopPlayer();
-  const pw=$("pw");
-  if(v.type==="instagram"){pw.innerHTML=`<iframe src="${esc(igEmbed(v.url))}" allowfullscreen allow="autoplay;encrypted-media;fullscreen"></iframe>`;return}
-  if(v.type==="facebook"){pw.innerHTML=`<iframe src="${esc(fbEmbed(v.url))}" allowfullscreen allow="autoplay;clipboard-write;encrypted-media;picture-in-picture;web-share;fullscreen"></iframe>`;return}
-  $("ctl").style.display="flex";
+  const pw=$("pw"),ctl=$("ctl"),emb=v.type==="instagram"||v.type==="facebook";
+  pw.className="pw"+(isVert(v)?" v":"");
+  ctl.classList.toggle("emb",emb);ctl.style.display="flex";
+  if(v.type==="instagram"){pw.innerHTML=`<iframe class="ig" src="${esc(igEmbed(v.url))}" allowfullscreen allow="autoplay;encrypted-media;fullscreen"></iframe>`;bindFs();return}
+  if(v.type==="facebook"){pw.innerHTML=`<iframe src="${esc(fbEmbed(v.url))}" allowfullscreen allow="autoplay;clipboard-write;encrypted-media;picture-in-picture;web-share;fullscreen"></iframe>`;bindFs();return}
   if(v.type==="direct"){
     pw.innerHTML=`<video playsinline autoplay src="${esc(v.url)}"></video><div class="tap"></div>`;
     const el=pw.querySelector("video");
+    el.addEventListener("loadedmetadata",()=>{if(!v.ratio||v.ratio==="auto")pw.classList.toggle("v",el.videoHeight>el.videoWidth)});
     AD={play:()=>el.play(),pause:()=>el.pause(),seek:x=>el.currentTime=x,time:()=>el.currentTime,dur:()=>el.duration||0,mute:m=>el.muted=m,rate:r=>el.playbackRate=r,playing:()=>!el.paused,muted:()=>el.muted};
     el.onerror=()=>toast("Cannot play this link");
     resume(id);bindCtl(id);
   }else{
-    pw.innerHTML=`<div id="yt"></div><div class="tap"></div>`;
+    pw.classList.add("paused");
+    pw.innerHTML=`<div id="yt"></div><div class="mk" style="background-image:url(https://i.ytimg.com/vi/${esc(v.vid)}/hqdefault.jpg)">${IC.play}</div><div class="tap"></div>`;
     loadYT().then(()=>{
       if(S.cur!==id)return;
-      ytP=new YT.Player("yt",{videoId:v.vid,playerVars:{controls:0,playsinline:1,rel:0,modestbranding:1,autoplay:1,fs:0,iv_load_policy:3},events:{
+      ytP=new YT.Player("yt",{videoId:v.vid,playerVars:{controls:0,playsinline:1,rel:0,modestbranding:1,autoplay:1,fs:0,iv_load_policy:3,disablekb:1},events:{
         onReady:()=>{if(S.cur!==id||!ytP)return;AD={play:()=>ytP.playVideo(),pause:()=>ytP.pauseVideo(),seek:x=>ytP.seekTo(x,true),time:()=>ytP.getCurrentTime(),dur:()=>ytP.getDuration(),mute:m=>m?ytP.mute():ytP.unMute(),rate:r=>ytP.setPlaybackRate(r),playing:()=>ytP.getPlayerState()===1,muted:()=>ytP.isMuted()};
           const sp=prog(id);if(sp>0&&sp<.97){const d=ytP.getDuration();if(d)ytP.seekTo(sp*d,true)}
           bindCtl(id);ytP.playVideo()},
+        onStateChange:e=>{pw.classList.toggle("paused",e.data!==1&&e.data!==3)},
         onError:()=>toast("This video cannot be played here")}})});
   }
 }
 function resume(id){const el=$("pw").querySelector("video"),sp=prog(id);el.addEventListener("loadedmetadata",()=>{if(sp>0&&sp<.97)el.currentTime=sp*el.duration},{once:true})}
+function bindFs(){$("c-fs").onclick=()=>{const w=$("o-player");document.fullscreenElement?document.exitFullscreen():(w.requestFullscreen||w.webkitRequestFullscreen||(()=>{})).call(w)}}
 let rates=[.5,1,1.25,1.5,2],ri=1;
 function bindCtl(id){
   ri=1;$("c-sp").textContent="1x";let seeking=false;
@@ -347,19 +417,49 @@ function bindCtl(id){
   sk.onchange=()=>{const d=AD&&AD.dur();if(d)AD.seek(sk.value/1000*d);seeking=false};
   const tog=()=>{if(!AD)return;AD.playing()?AD.pause():AD.play();setTimeout(up,150)};
   $("c-pp").onclick=tog;$("pw").querySelector(".tap").onclick=tog;
+  const mk=$("pw").querySelector(".mk");if(mk)mk.onclick=tog;
   $("c-rw").onclick=()=>AD&&AD.seek(Math.max(0,AD.time()-10));
   $("c-ff").onclick=()=>AD&&AD.seek(Math.min(AD.dur()||1e9,AD.time()+10));
   $("c-mu").onclick=()=>{if(!AD)return;AD.mute(!AD.muted());setTimeout(up,100)};
   $("c-sp").onclick=()=>{ri=(ri+1)%rates.length;AD&&AD.rate(rates[ri]);$("c-sp").textContent=rates[ri]+"x"};
-  $("c-fs").onclick=()=>{const w=$("pw");document.fullscreenElement?document.exitFullscreen():(w.requestFullscreen||w.webkitRequestFullscreen||(()=>{})).call(w)};
+  bindFs();
 }
+
+/* ---------- details: comments / likes / views ---------- */
+function entry(user,ts,body){return`<div class="lgrow"><span class="av">${esc((user||"?")[0])}</span><div style="min-width:0;flex:1"><div class="n" style="font-weight:600">${esc(user)}</div>${body||""}<div class="tmx">${esc(fmt(ts))}</div></div></div>`}
 function renderPinfo(){
-  const v=S.videos[S.cur];if(!v)return;
-  const liked=!!(S.likes[S.cur]&&S.likes[S.cur][S.user]);
-  $("pinfo").innerHTML=`<h2>${esc(v.title)}</h2><div class="st">${esc(v.channel||"Video Player")} • ${kfmt(vwCount(S.cur))} views • ${dshort(v.ts)}</div>
-<div class="acts"><button class="lk ${liked?"on":""}" id="plk">${IC.like}${kfmt(lkCount(S.cur))}</button><button id="pcm">${IC.cm}</button>${v.type==="instagram"||v.type==="facebook"?`<span style="color:var(--mu);font-size:12px;align-self:center">Controls are provided by ${typeLbl[v.type]}</span>`:""}</div>`;
-  $("plk").onclick=()=>toggleLike(S.cur);$("pcm").onclick=()=>toast("Comments are turned off");
+  const id=S.cur,v=S.videos[id];if(!v)return;
+  if(S.ptab==="v"&&!isM())S.ptab="c";
+  const liked=!!(S.likes[id]&&S.likes[id][S.user]),lc=lkCount(id),cc=cmCount(id),vc=vwCount(id);
+  $("pi-top").innerHTML=`<h2>${esc(v.title)}</h2><div class="st">${esc(v.channel||"Video Player")} • ${kfmt(vc)} views • ${dshort(v.ts)}</div>
+<div class="acts" style="padding-left:0"><button class="lk ${liked?"on":""}" id="plk">${IC.like}${kfmt(lc)}</button><button id="pcm">${IC.cm}${kfmt(cc)}</button></div>`;
+  $("plk").onclick=()=>toggleLike(id);$("pcm").onclick=()=>{S.ptab="c";renderPinfo();$("ci").focus()};
+  const T=[["c","Comments "+cc],["l","Likes "+lc]];if(isM())T.push(["v","Views "+vc]);
+  $("atabs").innerHTML=T.map(([k,l])=>`<button data-pt="${k}" class="${S.ptab===k?"on":""}">${l}</button>`).join("");
+  let h="";
+  if(S.ptab==="c"){
+    const C=Object.entries(v.comments||{}).map(([k,c])=>({k,...c})).sort((a,b)=>b.ts-a.ts);
+    h=C.length?C.map(c=>entry(c.user,c.ts,`<div class="cmt">${esc(c.text)}</div>`).replace('</div></div>'+'</div>',isM()?`</div><button data-dc="${c.k}" style="color:#ff6b6b;font-size:12px;margin-top:4px">Delete</button></div></div>`:'</div></div></div>')).join(""):'<div class="empty" style="padding:24px">No comments yet.</div>';
+  }else if(S.ptab==="l"){
+    const L=Object.entries(S.likes[id]||{}).map(([u,t])=>({u,t:typeof t==="number"?t:0})).sort((a,b)=>b.t-a.t);
+    h=L.length?L.map(x=>entry(x.u,x.t,'<div class="st" style="margin:2px 0 0">Liked this video</div>')).join(""):'<div class="empty" style="padding:24px">No likes yet.</div>';
+  }else{
+    const V=Object.values(S.views).filter(x=>x.vid===id).sort((a,b)=>b.ts-a.ts);
+    h=V.length?V.map(x=>entry(x.user,x.ts,'<div class="st" style="margin:2px 0 0">Viewed this video</div>')).join(""):'<div class="empty" style="padding:24px">No views yet.</div>';
+  }
+  $("pi-list").innerHTML=h;
+  $("cform").style.display=S.ptab==="c"?"flex":"none";
 }
+$("pinfo").onclick=e=>{
+  const t=e.target.closest("[data-pt]");if(t){S.ptab=t.dataset.pt;renderPinfo();return}
+  const d=e.target.closest("[data-dc]");
+  if(d&&isM()&&S.cur&&confirm("Delete this comment?"))remove(ref(db,`videos/${S.cur}/comments/${d.dataset.dc}`)).catch(()=>toast("Delete failed"));
+};
+function postC(){
+  const t=$("ci").value.trim();if(!t||!S.cur)return;$("ci").value="";
+  push(ref(db,`videos/${S.cur}/comments`),{user:S.user,text:t,ts:Date.now()}).catch(()=>toast("Could not post comment"));
+}
+$("cs").onclick=postC;$("ci").onkeydown=e=>{if(e.key==="Enter")postC()};
 
 /* ---------- add video ---------- */
 $("aok").onclick=async()=>{
@@ -369,18 +469,48 @@ $("aok").onclick=async()=>{
   $("aok").textContent="Adding...";
   if(pr.type==="youtube"){try{const r=await fetch("https://noembed.com/embed?url="+encodeURIComponent(url));const j=await r.json();if(j.title&&!title)title=j.title;if(j.author_name)channel=j.author_name}catch(e){}}
   if(!title)title=pr.type==="direct"?decodeURIComponent((url.split("?")[0].split("/").pop()||"Video")):typeLbl[pr.type]+" video";
-  try{await push(ref(db,"videos"),{url,type:pr.type,vid:pr.id||null,title,channel,by:S.user,ts:Date.now()});history.back();toast("Video added")}
+  try{await push(ref(db,"videos"),{url,type:pr.type,vid:pr.id||null,title,channel,ratio:$("ar").value,by:S.user,ts:Date.now()});history.back();toast("Video added")}
   catch(e){$("ae").textContent="Could not save. Check database rules."}
   $("aok").textContent="Add video";
 };
 
-/* ---------- manager ---------- */
-function renderMe(){$("mename").textContent=S.user||"";$("merole").textContent=isM()?"Manager":"User";$("mgr").style.display=$("mlogs").style.display=isM()?"":"none"}
+/* ---------- manage videos ---------- */
+function renderMe(){$("mename").textContent=S.user||"";$("merole").textContent=isM()?"Manager":"User";document.querySelectorAll("#o-me .mo").forEach(b=>b.style.display=isM()?"":"none")}
 $("mgr").onclick=()=>go("mgr");$("mlogs").onclick=()=>go("logs");$("nlogs").onclick=()=>go("logs");
+$("mvids").onclick=()=>go("vids");$("nvids").onclick=()=>go("vids");$("vadd").onclick=openAdd;
+function renderVids(){
+  if(!isM()){$("vlist").innerHTML='<div class="empty">Only the manager can manage videos.</div>';return}
+  const L=Object.entries(S.videos).map(([id,v])=>({id,...v})).sort((a,b)=>b.ts-a.ts);
+  S.vsig=sigOf();
+  $("vlist").innerHTML=L.length?L.map(v=>{
+    const th=v.type==="youtube"?`<img src="https://i.ytimg.com/vi/${esc(v.vid)}/mqdefault.jpg" alt="">`:typeLbl[v.type];
+    const r=v.ratio||"auto";
+    return`<div class="vm" data-id="${v.id}"><div class="vmh"><div class="vth ${v.type==="facebook"?"fb":v.type==="instagram"?"ig":""}">${th}</div><div>${typeLbl[v.type]} • ${kfmt(vwCount(v.id))} views • ${kfmt(lkCount(v.id))} likes • ${kfmt(cmCount(v.id))} comments<br>Added ${esc(dshort(v.ts))}</div></div>
+<label>Title</label><input class="vt" value="${esc(v.title)}" placeholder="Title">
+<label>Channel / label</label><input class="vc" value="${esc(v.channel||"")}" placeholder="Channel">
+<label>Video link</label><input class="vu" value="${esc(v.url)}" autocapitalize="none" autocorrect="off">
+<label>Player shape</label><select class="vr"><option value="auto" ${r==="auto"?"selected":""}>Auto (Reel/Short = 9:16, else 16:9)</option><option value="9:16" ${r==="9:16"?"selected":""}>Vertical 9:16</option><option value="16:9" ${r==="16:9"?"selected":""}>Landscape 16:9</option></select>
+<div class="vb"><button class="btn red" data-a="save">Save</button><button class="btn gh" data-a="open">Open</button><button class="btn gh" data-a="del" style="color:#ff6b6b">Delete</button></div></div>`}).join(""):'<div class="empty">No videos yet.</div>';
+}
+$("vlist").onclick=e=>{
+  const b=e.target.closest("[data-a]");if(!b||!isM())return;
+  const box=b.closest(".vm"),id=box.dataset.id,a=b.dataset.a;
+  if(a==="open"){openVideo(id);return}
+  if(a==="del"){if(confirm("Delete this video for everyone?"))remove(ref(db,"videos/"+id)).then(()=>remove(ref(db,"likes/"+id))).then(()=>toast("Video deleted")).catch(()=>toast("Delete failed"));return}
+  if(a==="save"){
+    const title=box.querySelector(".vt").value.trim(),channel=box.querySelector(".vc").value.trim(),url=box.querySelector(".vu").value.trim(),ratio=box.querySelector(".vr").value;
+    if(!title){toast("Title is required");return}
+    if(!/^https?:\/\//i.test(url)){toast("Enter a valid link");return}
+    const pr=parse(url);
+    update(ref(db,"videos/"+id),{title,channel:channel||(pr.type==="direct"?"Direct video":typeLbl[pr.type]),url,type:pr.type,vid:pr.id||null,ratio}).then(()=>toast("Saved")).catch(()=>toast("Save failed"));
+  }
+};
+
+/* ---------- manager users ---------- */
 function renderMgr(){
   const us=Object.entries(S.users).sort((a,b)=>(a[1].createdAt||0)-(b[1].createdAt||0));
   $("ulist").innerHTML=`<div class="row"><span class="av">${MGR[0]}</span><div class="g"><div class="n">${MGR}</div><div class="s">Manager (permanent)</div></div></div>`+
-  us.map(([n,u])=>`<div class="row"><span class="av">${esc(n[0])}</span><div class="g"><div class="n">${esc(n)}</div><div class="s">Password: ${esc(u.password)}</div></div><button class="x" data-u="${esc(n)}" aria-label="Remove">${IC.del}</button></div>`).join("");
+  us.map(([n,u])=>`<div class="row"><span class="av">${esc(n[0])}</span><div class="g"><div class="n">${esc(n)}</div><div class="s">Password: ${esc(u.password)}</div></div><button class="x" data-u="${esc(n)}" aria-label="Remove"><svg viewBox="0 0 24 24"><path d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6zM19 4h-3.500l-1-1h-5l-1 1H5v2h14z"/></svg></button></div>`).join("");
 }
 $("ulist").onclick=e=>{const b=e.target.closest("[data-u]");if(!b||!isM())return;const n=b.dataset.u;
   if(confirm(`Remove user "${n}"?`))remove(ref(db,"users/"+n)).catch(()=>toast("Remove failed"))};
@@ -394,15 +524,39 @@ $("nadd").onclick=async()=>{
 };
 $("nall").onclick=()=>{if(isM()&&confirm("Remove ALL users? zamir stays."))remove(ref(db,"users")).then(()=>toast("All users removed")).catch(()=>toast("Remove failed"))};
 
-/* ---------- logs ---------- */
+/* ---------- activity logs ---------- */
 function renderLogs(){
-  const L=Object.values(S.views).sort((a,b)=>b.ts-a.ts);
-  if(!isM()){$("logs").innerHTML='<div class="empty">Only the manager can view history.</div>';return}
-  $("logs").innerHTML=L.length?L.map(l=>`<div class="lgrow"><span class="av">${esc((l.user||"?")[0])}</span><div style="min-width:0"><div class="n" style="font-weight:600">${esc(l.user)}</div><div class="ttl" style="font-size:13px;color:#ddd">${esc(l.title)}</div><div class="tmx">${esc(l.label||fmt(l.ts))}</div></div></div>`).join(""):'<div class="empty">No views yet.</div>';
+  if(!isM()){$("logs").innerHTML='<div class="empty">Only the manager can view activity.</div>';return}
+  const A=[];
+  for(const k in S.views){const l=S.views[k];A.push({k:"v",user:l.user,title:l.title,ts:l.ts})}
+  for(const vid in S.likes){const t=(S.videos[vid]||{}).title||"Deleted video";for(const u in S.likes[vid]){const x=S.likes[vid][u];A.push({k:"l",user:u,title:t,ts:typeof x==="number"?x:0})}}
+  for(const vid in S.videos){const c=S.videos[vid].comments;if(c)for(const ck in c)A.push({k:"c",user:c[ck].user,title:S.videos[vid].title,text:c[ck].text,ts:c[ck].ts})}
+  const F=[["all","All"],["v","Views"],["l","Likes"],["c","Comments"]];
+  const L=A.filter(x=>S.lf==="all"||x.k===S.lf).sort((a,b)=>b.ts-a.ts);
+  const lb={v:"Viewed",l:"Liked",c:"Commented"};
+  $("logs").innerHTML=`<div class="at" style="margin-top:0">${F.map(([k,l])=>`<button data-lf="${k}" class="${S.lf===k?"on":""}">${l}</button>`).join("")}</div>`+
+  (L.length?L.map(l=>`<div class="lgrow"><span class="av">${esc((l.user||"?")[0])}</span><div style="min-width:0"><div class="n" style="font-weight:600">${esc(l.user)}<span class="bd ${l.k}">${lb[l.k]}</span></div><div class="ttl" style="font-size:13px;color:#ddd">${esc(l.title)}</div>${l.text?`<div class="cmt">${esc(l.text)}</div>`:""}<div class="tmx">${esc(fmt(l.ts))}</div></div></div>`).join(""):'<div class="empty">No activity yet.</div>');
 }
+$("logs").onclick=e=>{const b=e.target.closest("[data-lf]");if(b){S.lf=b.dataset.lf;renderLogs()}};
+
+/* ---------- PWA install popup ---------- */
+let dp=null,ibHid=sessionStorage.getItem("vp_ib")==="1";
+const standalone=()=>["standalone","fullscreen","minimal-ui"].some(m=>matchMedia(`(display-mode: ${m})`).matches)||navigator.standalone===true;
+function showIB(){if(standalone()||ibHid)return;$("ib").classList.add("on")}
+function hideIB(){$("ib").classList.remove("on")}
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();dp=e;showIB()});
+window.addEventListener("appinstalled",()=>{dp=null;hideIB();toast("App installed")});
+$("inn").onclick=()=>{ibHid=true;sessionStorage.setItem("vp_ib","1");hideIB()};
+$("iy").onclick=async()=>{
+  if(dp){try{dp.prompt();const r=await dp.userChoice;dp=null;if(r.outcome==="accepted")hideIB()}catch(e){}return}
+  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  $("iht").innerHTML=ios?"Tap the <b>Share</b> button in Safari, then choose <b>Add to Home Screen</b>.":"Open the browser <b>menu (⋮)</b> and tap <b>Install app</b> or <b>Add to Home screen</b>.";
+  $("ih").style.display="flex";
+};
+$("ihc").onclick=()=>{$("ih").style.display="none"};
+setTimeout(showIB,1000);
 
 /* ---------- start ---------- */
-$("bell").onclick=()=>toast("No new notifications");
 if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 applySession();
 </script>
